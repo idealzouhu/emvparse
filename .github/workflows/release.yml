@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            triplet: x64-windows
+            asset_name: windows-x64
+            archive_ext: zip
+          - os: ubuntu-latest
+            triplet: x64-linux
+            asset_name: linux-x64
+            archive_ext: tar.gz
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version from tag
+        id: ver
+        shell: bash
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            VER="${TAG#v}"
+          else
+            VER="1.0.0"
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          if [[ -f CMakeLists.txt ]]; then
+            PROJ_VER=$(grep -E '^project\(emvparse' CMakeLists.txt | sed -E 's/.*VERSION ([0-9.]+).*/\1/')
+            if [[ -n "$PROJ_VER" && "$PROJ_VER" != "$VER" && "${{ github.ref_type }}" == "tag" ]]; then
+              echo "Tag version $VER does not match PROJECT_VERSION $PROJ_VER"
+              exit 1
+            fi
+          fi
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/vcpkg/installed
+            ${{ github.workspace }}/vcpkg/buildtrees
+            ${{ github.workspace }}/vcpkg/downloads
+          key: release-vcpkg-${{ matrix.os }}-${{ matrix.triplet }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            release-vcpkg-${{ matrix.os }}-${{ matrix.triplet }}-
+
+      - name: Bootstrap vcpkg (Linux)
+        if: runner.os != 'Windows'
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+          ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Bootstrap vcpkg (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+          .\vcpkg\bootstrap-vcpkg.bat
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_TESTING=OFF
+          -DBUILD_EMVPARSE_CLI=ON
+          -DCMAKE_INSTALL_PREFIX=install
+          -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build and install
+        run: |
+          cmake --build build --config Release
+          cmake --install build --config Release
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          cd install/bin
+          EXE=./emvparse
+          if [[ "${{ runner.os }}" == "Windows" ]]; then EXE=./emvparse.exe; fi
+          "$EXE" --version
+          "$EXE" parse 9F33020141 --scheme EMV | head -c 20
+
+      - name: Pack (Windows)
+        if: matrix.archive_ext == 'zip'
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          Compress-Archive -Path install/* -DestinationPath "emvparse-$ver-${{ matrix.asset_name }}.zip"
+
+      - name: Pack (Linux)
+        if: matrix.archive_ext == 'tar.gz'
+        run: |
+          ver="${{ steps.ver.outputs.version }}"
+          tar -czf "emvparse-${ver}-${{ matrix.asset_name }}.tar.gz" -C install .
+
+      - uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            emvparse-${{ steps.ver.outputs.version }}-${{ matrix.asset_name }}.*

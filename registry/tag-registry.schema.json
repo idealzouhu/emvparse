@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emvparse.local/registry/tag-registry.schema.json",
+  "title": "EMV Tag Registry",
+  "description": "Tag semantic definitions for emvparse (English body text in registry/)",
+  "type": "object",
+  "required": ["metadata", "tags"],
+  "additionalProperties": false,
+  "properties": {
+    "metadata": { "$ref": "#/$defs/RegistryMetadata" },
+    "tags": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/TagDefinition" }
+    },
+    "annex": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "named_tags": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/NamedTagEntry" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "RegistryMetadata": {
+      "type": "object",
+      "required": ["scheme", "spec"],
+      "additionalProperties": false,
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "description": "Scheme id: EMV, Visa, UPI, ..."
+        },
+        "spec": {
+          "type": "object",
+          "required": ["document"],
+          "additionalProperties": false,
+          "properties": {
+            "document": { "type": "string" },
+            "version": { "type": "string" },
+            "sections": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "note": { "type": "string" }
+          }
+        },
+        "generated": { "type": "string" },
+        "extends": {
+          "type": ["string", "null"],
+          "description": "Base registry filename this overlay extends (informational)"
+        }
+      }
+    },
+    "TagHex": {
+      "type": "string",
+      "pattern": "^[0-9A-F]{1,8}$"
+    },
+    "TagType": {
+      "type": "string",
+      "enum": [
+        "NUMERIC",
+        "TEXT",
+        "DATE",
+        "BITFIELD",
+        "ENUM",
+        "BINARY",
+        "LIST",
+        "CONSTRUCTED",
+        "N/A"
+      ]
+    },
+    "EmvFormat": {
+      "type": "string",
+      "enum": ["n", "cn", "a", "an", "ans", "b"]
+    },
+    "SpecRef": {
+      "type": "object",
+      "required": ["doc", "section"],
+      "additionalProperties": false,
+      "properties": {
+        "doc": { "type": "string" },
+        "section": { "type": "string" },
+        "table": { "type": "string" }
+      }
+    },
+    "Disambiguation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parentTemplate": { "type": "string" },
+        "context": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "BitFieldRule": {
+      "type": "object",
+      "required": ["position", "length", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "position": { "type": "integer", "minimum": 0 },
+        "length": { "type": "integer", "minimum": 1 },
+        "type": {
+          "type": "string",
+          "enum": ["NUMERIC", "ENUM", "BOOLEAN"]
+        },
+        "name": { "type": "string" },
+        "enumMap": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "TagVariantBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "$ref": "#/$defs/TagType" },
+        "format": { "$ref": "#/$defs/EmvFormat" },
+        "length": { "type": "string" },
+        "source": { "type": "string" },
+        "scheme": { "type": "string" },
+        "kernel": { "type": "string" },
+        "template": { "type": "string" },
+        "note": { "type": "string" },
+        "bitFields": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/BitFieldRule" }
+        },
+        "enumMap": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SpecRef" }
+        },
+        "disambiguation": { "$ref": "#/$defs/Disambiguation" },
+        "semanticPending": { "type": "boolean" }
+      }
+    },
+    "TagDefinition": {
+      "type": "object",
+      "required": ["tag"],
+      "additionalProperties": false,
+      "properties": {
+        "tag": { "$ref": "#/$defs/TagHex" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "$ref": "#/$defs/TagType" },
+        "format": { "$ref": "#/$defs/EmvFormat" },
+        "length": { "type": "string" },
+        "source": { "type": "string" },
+        "scheme": { "type": "string" },
+        "kernel": { "type": "string" },
+        "template": { "type": "string" },
+        "note": { "type": "string" },
+        "bitFields": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/BitFieldRule" }
+        },
+        "enumMap": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "refs": {
+          "type": "array",
+          "description": "Optional per-tag citations. File-level metadata.spec is the default source; add refs only when this tag needs a different section or table.",
+          "items": { "$ref": "#/$defs/SpecRef" }
+        },
+        "disambiguation": { "$ref": "#/$defs/Disambiguation" },
+        "semanticPending": { "type": "boolean" },
+        "variants": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/TagVariantBody" }
+        }
+      },
+      "oneOf": [
+        {
+          "required": ["type"],
+          "not": { "required": ["variants"] }
+        },
+        {
+          "required": ["variants"]
+        }
+      ]
+    },
+    "NamedTagEntry": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "$ref": "#/$defs/TagType" },
+        "format": { "$ref": "#/$defs/EmvFormat" },
+        "length": { "type": "string" },
+        "source": { "type": "string" },
+        "refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SpecRef" }
+        },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

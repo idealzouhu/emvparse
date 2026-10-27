@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/EmvParseTargets.cmake")
+
+find_dependency(nlohmann_json QUIET)
+
+check_required_components(EmvParse)
+
+set(EmvParse_VERSION @PROJECT_VERSION@)

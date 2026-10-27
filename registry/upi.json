@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "scheme": "UPI",
+    "spec": {
+      "document": "中国银联IC卡技术规范——基础规范 第5部分：非接触式IC卡支付规范.pdf",
+      "version": "Q/CUP 045.5—2014",
+      "sections": ["Table 4 Terminal Transaction Attributes", "Card Transaction Attributes"]
+    },
+    "extends": "emv.json",
+    "generated": "2026-10-27"
+  },
+  "tags": [
+    {
+      "tag": "9F66",
+      "name": "Terminal Transaction Attributes",
+      "description": "qUICS terminal capabilities and transaction requirements; provided in GPO when requested in PDOL",
+      "type": "BITFIELD",
+      "format": "b",
+      "length": "4",
+      "source": "Terminal",
+      "scheme": "UPI",
+      "bitFields": [
+        {
+          "position": 1,
+          "length": 1,
+          "name": "Contactless debit/credit supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 2,
+          "length": 1,
+          "name": "qUICS supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 3,
+          "length": 1,
+          "name": "Contact debit/credit supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 4,
+          "length": 1,
+          "name": "Offline-only terminal",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 5,
+          "length": 1,
+          "name": "Online PIN supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 6,
+          "length": 1,
+          "name": "Signature supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 8,
+          "length": 1,
+          "name": "Online cryptogram required",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 9,
+          "length": 1,
+          "name": "CVM required",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 24,
+          "length": 1,
+          "name": "Terminal supports fDDA version 01",
+          "type": "BOOLEAN"
+        }
+      ]
+    },
+    {
+      "tag": "9F6C",
+      "name": "Card Transaction Attributes",
+      "description": "Card CVM and processing preferences for qUICS; optional in GPO response",
+      "type": "BITFIELD",
+      "format": "b",
+      "length": "2",
+      "source": "ICC",
+      "scheme": "UPI",
+      "bitFields": [
+        {
+          "position": 0,
+          "length": 1,
+          "name": "Online processing requested",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 1,
+          "length": 1,
+          "name": "Signature required",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 2,
+          "length": 1,
+          "name": "Go online if ODA fails (online-capable terminal)",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 3,
+          "length": 1,
+          "name": "Switch to contact if ODA fails",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 4,
+          "length": 1,
+          "name": "Go online if application expired",
+          "type": "BOOLEAN"
+        }
+      ]
+    }
+  ]
+}

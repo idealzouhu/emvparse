@@ -1,0 +1,155 @@
+{
+  "metadata": {
+    "scheme": "EMV",
+    "spec": {
+      "document": "EMV-Contactless-Book-B-Entry-Point-Specification-v2.11.pdf",
+      "version": "2.11",
+      "sections": ["Annex A", "Annex C"]
+    },
+    "extends": "emv.json",
+    "generated": "2026-10-27"
+  },
+  "tags": [
+    {
+      "tag": "8B",
+      "name": "POI Information",
+      "description": "Contains information about the terminal and the acceptance environment. The value field has format ID1 L1 V1 ID2 L2 V2… where ID is a two-byte identifier (not BER-TLV tags), L is value length in one byte (0–61), and V is the value. IDs are assigned by EMVCo and registered with EMVCo; see Annex A.1 and Table A-2.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var up to 64",
+      "source": "Entry Point",
+      "kernel": "EMV",
+      "scheme": "EMV",
+      "note": "Internal structure is ID/L/V pairs, not nested BER-TLV. EMV-defined POI Information ID 0001 (Terminal Category) is in Table A-2."
+    },
+    {
+      "tag": "96",
+      "name": "Kernel Identifier–Terminal",
+      "description": "Identifies the kernel used for the transaction",
+      "type": "BINARY",
+      "format": "b",
+      "length": "8",
+      "source": "Entry Point",
+      "kernel": "EMV",
+      "scheme": "EMV",
+      "semanticPending": true,
+      "note": "Format details in Book B Table 3-7 (Kernel Identifier–Terminal)."
+    },
+    {
+      "tag": "9F0A",
+      "variants": [
+        {
+          "name": "Application Selection Registered Proprietary Data (ASRPD)",
+          "description": "Proprietary data allowing for proprietary processing during application selection. Proprietary data is identified using Proprietary Data Identifiers that are managed by EMVCo and their usage by the Application Selection processing is according to their intended usage, as agreed by EMVCo during registration",
+          "type": "BINARY",
+          "format": "b",
+          "length": "var",
+          "source": "Card",
+          "kernel": "EMV",
+          "template": "73, BF0C",
+          "scheme": "EMV",
+          "disambiguation": {
+            "parentTemplate": "73"
+          }
+        },
+        {
+          "name": "Application Selection Registered Proprietary Data (ASRPD)",
+          "description": "Proprietary data allowing for proprietary processing during application selection. Proprietary data is identified using Proprietary Data Identifiers that are managed by EMVCo and their usage by the Entry Point is according to their intended usage, as agreed by EMVCo during registration.",
+          "type": "BINARY",
+          "format": "b",
+          "length": "var",
+          "source": "Card",
+          "kernel": "EMV",
+          "template": "61 or BF0C",
+          "scheme": "EMV",
+          "disambiguation": {
+            "parentTemplate": "61"
+          },
+          "refs": [
+            {
+              "doc": "EMV-Contactless-Book-B-Entry-Point-Specification-v2.11.pdf",
+              "section": "Annex A",
+              "table": "Table A-1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "9F29",
+      "name": "Extended Selection",
+      "description": "The value to be appended to the ADF Name in the data field of the SELECT command, if the Extended Selection Support flag is present and set to 1. Content is payment system proprietary. Length of Extended Selection plus length of ADF Name in the same directory entry must be at most 16.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "Card",
+      "kernel": "EMV",
+      "template": "61",
+      "scheme": "EMV",
+      "disambiguation": {
+        "parentTemplate": "61"
+      }
+    },
+    {
+      "tag": "9F2A",
+      "name": "Kernel Identifier",
+      "description": "Indicates the card's preference for the kernel on which the contactless application can be processed.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "1 or 3-8",
+      "source": "Card",
+      "kernel": "EMV",
+      "template": "61",
+      "scheme": "EMV",
+      "semanticPending": true,
+      "note": "Format details in Book B Table 3-4 and Table 3-5.",
+      "disambiguation": {
+        "parentTemplate": "61"
+      }
+    },
+    {
+      "tag": "9F3E",
+      "name": "Terminal Categories Supported List",
+      "description": "Contains a list of one or more terminal categories supported by the card. Bytes 1–2: Terminal Category 1; bytes 3–4: Terminal Category 2; plus two bytes for each additional Terminal Category. Terminal Categories defined for this specification are in Table A-2 (Terminal Category, POI Information ID 0001).",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "Card",
+      "kernel": "EMV",
+      "template": "BF0C",
+      "scheme": "EMV",
+      "disambiguation": {
+        "parentTemplate": "BF0C"
+      }
+    },
+    {
+      "tag": "9F3F",
+      "name": "Selection Data Object List (SDOL)",
+      "description": "Contains a list of terminal resident data objects (tags and lengths) needed by the card in processing the SEND POI INFORMATION (SPI) command. The SDOL can request Amount, Authorised (Numeric) (9F02), POI Information (8B), Terminal Country Code (9F1A), and Transaction Currency Code (5F2A); only those objects must be known and correct when requested.",
+      "type": "LIST",
+      "format": "b",
+      "length": "var",
+      "source": "Card",
+      "kernel": "EMV",
+      "template": "BF0C",
+      "scheme": "EMV",
+      "note": "Defines data required by card for SEND POI INFORMATION",
+      "disambiguation": {
+        "parentTemplate": "BF0C"
+      }
+    },
+    {
+      "tag": "9F66",
+      "name": "Terminal Transaction Qualifiers",
+      "description": "Indicates the requirements for online and CVM processing as a result of Entry Point processing. The scope of this tag is limited to Entry Point. Kernels may use this tag for different purposes.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "4",
+      "source": "Entry Point",
+      "kernel": "EMV",
+      "scheme": "EMV",
+      "semanticPending": true,
+      "note": "Entry Point definition (Book B Table A-1). Bit semantics for contactless reader capabilities may be defined in Book A Table 5-4 or scheme overlays (e.g. Visa TTQ)."
+    }
+  ]
+}

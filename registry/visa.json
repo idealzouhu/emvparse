@@ -1,0 +1,149 @@
+{
+  "metadata": {
+    "scheme": "Visa",
+    "spec": {
+      "document": "VCPS_2_2_Jan2016.pdf",
+      "version": "2.2",
+      "sections": [
+        "Terminal Transaction Qualifiers (TTQ)",
+        "Card Transaction Qualifiers (CTQ)"
+      ]
+    },
+    "extends": "emv.json",
+    "generated": "2026-10-27"
+  },
+  "tags": [
+    {
+      "tag": "9F66",
+      "name": "Terminal Transaction Qualifiers (TTQ)",
+      "description": "Visa contactless reader capabilities and transaction requirements sent in GPO when requested by PDOL",
+      "type": "BITFIELD",
+      "format": "b",
+      "length": "4",
+      "source": "Terminal",
+      "scheme": "Visa",
+      "bitFields": [
+        {
+          "position": 0,
+          "length": 1,
+          "name": "MSD supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 1,
+          "length": 1,
+          "name": "VSDC supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 2,
+          "length": 1,
+          "name": "EMV contact chip supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 3,
+          "length": 1,
+          "name": "Offline-only reader",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 4,
+          "length": 1,
+          "name": "Online PIN supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 5,
+          "length": 1,
+          "name": "Signature supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 6,
+          "length": 1,
+          "name": "Offline Data Authentication for Online Authorizations supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 8,
+          "length": 1,
+          "name": "Online cryptogram required",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 9,
+          "length": 1,
+          "name": "CVM required",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 10,
+          "length": 1,
+          "name": "Contact chip offline PIN supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 11,
+          "length": 1,
+          "name": "Issuer Update Processing supported",
+          "type": "BOOLEAN"
+        }
+      ]
+    },
+    {
+      "tag": "9F6C",
+      "name": "Card Transaction Qualifiers (CTQ)",
+      "description": "Visa card indicators for CVM and issuer preferences returned in GPO when present",
+      "type": "BITFIELD",
+      "format": "b",
+      "length": "2",
+      "source": "ICC",
+      "scheme": "Visa",
+      "bitFields": [
+        {
+          "position": 0,
+          "length": 1,
+          "name": "Online PIN required",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 1,
+          "length": 1,
+          "name": "Signature required",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 2,
+          "length": 1,
+          "name": "Go online if ODA fails and reader is online capable",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 3,
+          "length": 1,
+          "name": "Switch interface if ODA fails and reader supports contact chip",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 4,
+          "length": 1,
+          "name": "Go online if application expired",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 5,
+          "length": 1,
+          "name": "Switch interface for cash transactions",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 6,
+          "length": 1,
+          "name": "Switch interface for cashback transactions",
+          "type": "BOOLEAN"
+        }
+      ]
+    }
+  ]
+}

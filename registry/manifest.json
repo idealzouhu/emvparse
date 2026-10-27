@@ -1,0 +1,9 @@
+{
+  "base": "emv.json",
+  "overlays": {
+    "EMV": ["contactless-entry-point.json"],
+    "Visa": ["contactless-entry-point.json", "visa.json"],
+    "UPI": ["contactless-entry-point.json", "upi.json"]
+  },
+  "defaultScheme": "EMV"
+}
