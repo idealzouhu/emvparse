@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emvparse.local/registry/apdu-commands.schema.json",
+  "title": "EMV APDU command registry",
+  "description": "C-APDU command names, P1/P2 hints, and R-APDU status words for emvparse (English body text in registry/)",
+  "type": "object",
+  "required": ["commands", "statusWords"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editors (not read at runtime)"
+    },
+    "metadata": { "$ref": "#/$defs/ApduMetadata" },
+    "commands": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ApduCommand" }
+    },
+    "statusWords": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/StatusWord" }
+    }
+  },
+  "$defs": {
+    "ApduByteHex": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{2}$",
+      "description": "Single APDU byte as two hex digits (CLA, INS, etc.)"
+    },
+    "StatusWordHex": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{4}$",
+      "description": "Two-byte status word SW1||SW2"
+    },
+    "ParamEnumKey": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{1,2}$",
+      "description": "P1 or P2 value key (hex, usually two digits)"
+    },
+    "ApduSpecRef": {
+      "type": "object",
+      "required": ["document"],
+      "additionalProperties": false,
+      "properties": {
+        "document": { "type": "string" },
+        "version": { "type": "string" },
+        "sections": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "ApduMetadata": {
+      "type": "object",
+      "required": ["scheme", "spec"],
+      "additionalProperties": false,
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "description": "Normative scope: EMV common application commands (not a card-brand overlay)"
+        },
+        "description": { "type": "string" },
+        "spec": { "$ref": "#/$defs/ApduSpecRef" },
+        "generated": { "type": "string" }
+      }
+    },
+    "ParamRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "enumMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "propertyNames": { "$ref": "#/$defs/ParamEnumKey" }
+        },
+        "numericRecord": {
+          "type": "boolean",
+          "description": "When true, P1 is interpreted as a record number"
+        },
+        "tagReference": {
+          "type": "boolean",
+          "description": "When true on P1 and P2, combined as a tag reference (GET DATA)"
+        },
+        "sfiShift": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7,
+          "description": "EMV READ RECORD: SFI = P2 >> sfiShift"
+        }
+      }
+    },
+    "DataFormat": {
+      "type": "string",
+      "enum": ["none", "ber_tlv", "binary", "df_name", "fci_template", "tag"],
+      "description": "Command Data field interpretation (ber_tlv triggers nested TLV parse)"
+    },
+    "ApduCommand": {
+      "type": "object",
+      "required": ["cla", "ins", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "cla": { "$ref": "#/$defs/ApduByteHex" },
+        "ins": { "$ref": "#/$defs/ApduByteHex" },
+        "name": { "type": "string", "minLength": 1 },
+        "dataFormat": { "$ref": "#/$defs/DataFormat" },
+        "p1": { "$ref": "#/$defs/ParamRule" },
+        "p2": { "$ref": "#/$defs/ParamRule" }
+      }
+    },
+    "StatusWord": {
+      "type": "object",
+      "required": ["sw", "meaning"],
+      "additionalProperties": false,
+      "properties": {
+        "sw": { "$ref": "#/$defs/StatusWordHex" },
+        "meaning": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -2,15 +2,38 @@
 
 **语言：** [English](README.md) · 简体中文
 
-EMV BER-TLV 解析库与命令行工具：解析十六进制 TLV 流，并按 Tag Registry 输出 JSON 语义。
+EMV BER-TLV 解析库与命令行工具：默认识别 **纯 TLV**、**C-APDU**、**R-APDU**，并按 Tag / APDU Registry 输出结构化结果。
 
 ## CLI 快速上手
 
 ```bash
 emvparse --version
-emvparse parse 9F33020141 --scheme EMV
+
+# --format json | table | html  （默认 json；html 写文件，常用 -o report.html）
+# --input auto | tlv | capdu | rapdu  （默认 auto）
+# 需要时可加 --scheme EMV|Visa|UPI、--registry path/to/manifest.json
+
+# 纯 TLV（例如 GPO 响应模板 77…）
+emvparse parse 770E8202198094081001020120010300 --format json
+emvparse parse 770E8202198094081001020120010300 --format table
+emvparse parse 770E8202198094081001020120010300 --format html -o report.html
+
+# C-APDU（例如 READ RECORD Case 2、GPO）
+emvparse parse 00B2021400 --format json
+emvparse parse 00B2021400 --format table
+emvparse parse 80A8000002830000 --format json
+
+# R-APDU（FCI 响应体 + 状态字 9000）
+emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 --format table
+
+# 强制整段按 TLV 解析（不拆 SW），调试用
+emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 --input tlv --format json
+
+# 单 Tag 注册表查询
 emvparse tag-info 9F33 --scheme EMV
 ```
+
+**关于 `--format table`：** 输出是便于阅读的**纯文本**，不一定是统一网格。TLV 为 TAG/Name/Length/Value 列；**C-APDU** 为命令名 + CLA/INS/P1/P2/… 字段块；**R-APDU** 为状态字摘要 + 下方 TLV 行。脚本用 **json**，存档用 **html**。
 
 安装包用法、环境变量与退出码：[命令行指南](docs/zh/命令行指南.md) · [CLI guide (English)](docs/en/cli-guide.md).
 

@@ -13,12 +13,14 @@ For local builds without `cmake --install`, run `build/bin/Release/emvparse` (or
 
 ### `parse`
 
-Parse hex TLV input to stdout as JSON (default), a plain-text table, or standalone HTML.
+Parse hex input to stdout as JSON (default), **plain text** (`--format table`), or standalone HTML. The table format is a **human-readable layout**, not always a fixed grid: TLV uses columns; C-APDU uses a labeled field block; R-APDU adds a status line plus TLV rows. By default the tool **auto-detects** plain BER-TLV, ISO 7816 **C-APDU** commands, or **R-APDU** responses (body + status word).
 
 ```bash
 emvparse parse 9F33020141 --scheme EMV
 emvparse parse --file capture.hex --scheme Visa
 echo 9F33020141 | emvparse parse -
+emvparse parse 80A8000002830000 --format json
+emvparse parse 00B2021400 --format table
 emvparse parse 770E8202198094081001020120010300 --format table --semantic active
 emvparse parse 770E8202198094081001020120010300 --format html
 emvparse parse --file capture.hex --format html -o capture.html
@@ -28,9 +30,10 @@ Hex may include spaces and an optional `0x` prefix.
 
 | Option | Values | Notes |
 |--------|--------|--------|
-| `--format` | `json` (default), `table`, `html` | JSON/table go to stdout; **HTML is written to a file** (default `report.html`, or `<hex-file>.html` with `--file`). |
+| `--format` | `json` (default), `table`, `html` | **json** / **table** → stdout (table = plain text, layout varies by input kind); **html** → file (default `report.html`, or `<hex-file>.html` with `--file`). |
 | `--output`, `-o` | path | **HTML only.** Output file; use `-` to print HTML on stdout. |
 | `--semantic` | `active` (default), `full` | **Table only.** `full` prints all bit-field lines; `active` shows set bits (and non-RFU summaries). |
+| `--input` | `auto` (default), `tlv`, `capdu`, `rapdu` | Force interpretation; `auto` tries C-APDU, then R-APDU (body + SW), else TLV. |
 | `--scheme` | `EMV`, `Visa`, `UPI` | Default `EMV`. |
 | `--registry` | path | `manifest.json` or registry directory (`--manifest` alias). |
 

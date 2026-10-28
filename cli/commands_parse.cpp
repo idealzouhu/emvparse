@@ -21,6 +21,7 @@ void printParseUsage(std::ostream& out) {
         << "  --output, -o <path>       Write HTML to file (default: report.html, or\n"
         << "                            <hex-file>.html with --file; use - for stdout)\n"
         << "  --semantic active|full    Semantic detail for table only (default: active)\n"
+        << "  --input auto|tlv|capdu|rapdu  Input interpretation (default: auto)\n"
         << "  --scheme <EMV|Visa|UPI>   Registry scheme (default: EMV)\n"
         << "  --registry <path>         manifest.json or registry directory\n"
         << "  --manifest <path>         Alias for --registry\n";
@@ -46,6 +47,7 @@ struct ParseFormatOpts {
     emvparse::OutputFormat format = emvparse::OutputFormat::Json;
     emvparse::SemanticSummary semantic = emvparse::SemanticSummary::Active;
     bool semanticExplicit = false;
+    emvparse::InputMode input = emvparse::InputMode::Auto;
     std::string outputPath;
     bool outputExplicit = false;
 };
@@ -61,6 +63,26 @@ bool parseOutputFormat(const char* value, emvparse::OutputFormat& out) {
     }
     if (std::strcmp(value, "html") == 0) {
         out = emvparse::OutputFormat::Html;
+        return true;
+    }
+    return false;
+}
+
+bool parseInputMode(const char* value, emvparse::InputMode& out) {
+    if (std::strcmp(value, "auto") == 0) {
+        out = emvparse::InputMode::Auto;
+        return true;
+    }
+    if (std::strcmp(value, "tlv") == 0) {
+        out = emvparse::InputMode::Tlv;
+        return true;
+    }
+    if (std::strcmp(value, "capdu") == 0) {
+        out = emvparse::InputMode::Capdu;
+        return true;
+    }
+    if (std::strcmp(value, "rapdu") == 0) {
+        out = emvparse::InputMode::Rapdu;
         return true;
     }
     return false;
@@ -105,6 +127,12 @@ bool parseParseFormatOptions(int& index, int argc, char* argv[], ParseFormatOpts
                 return false;
             }
             fmt.semanticExplicit = true;
+            ++index;
+        } else if (std::strcmp(argv[index], "--input") == 0 && index + 1 < argc) {
+            if (!parseInputMode(argv[index + 1], fmt.input)) {
+                std::cerr << "error: invalid --input (use auto, tlv, capdu, or rapdu)\n";
+                return false;
+            }
             ++index;
         } else if ((std::strcmp(argv[index], "--output") == 0 || std::strcmp(argv[index], "-o") == 0) &&
                    index + 1 < argc) {
@@ -199,14 +227,10 @@ int runParseCommand(int argc, char* argv[]) {
     emvparse::ParseOutputOptions outputOpts;
     outputOpts.format = fmt.format;
     outputOpts.formatOptions.semantic = fmt.semantic;
+    outputOpts.input = fmt.input;
 
     const std::string output = parser.parseHexWithOptions(hexInput, outputOpts);
-    if (fmt.format == emvparse::OutputFormat::Json) {
-        if (output == "[]" && !hexInput.empty()) {
-            std::cerr << "parse failed: invalid hex input\n";
-            return 3;
-        }
-    } else if (output.empty() && !hexInput.empty()) {
+    if (output.empty() && !hexInput.empty()) {
         std::cerr << "parse failed: invalid hex input\n";
         return 3;
     }

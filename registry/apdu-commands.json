@@ -1,0 +1,193 @@
+{
+  "$schema": "./apdu-commands.schema.json",
+  "metadata": {
+    "scheme": "EMV",
+    "description": "C-APDU command names, P1/P2 hints, and R-APDU status words for payment application protocol (English).",
+    "spec": {
+      "document": "EMV_v4.4_Book_3_Application_Specification.pdf",
+      "version": "4.4",
+      "sections": [
+        "Chapter 6 — Commands between ICC and terminal",
+        "Annex A — EMV command coding (CLA/INS reference)"
+      ],
+      "note": "APDU case layout and status bytes SW1–SW2 also follow ISO/IEC 7816-4."
+    },
+    "generated": "2026-10-27"
+  },
+  "commands": [
+    {
+      "cla": "00",
+      "ins": "A4",
+      "name": "SELECT",
+      "dataFormat": "ber_tlv",
+      "p1": {
+        "name": "Selection control (P1)",
+        "enumMap": {
+          "00": "Select by identifier",
+          "02": "Select EF under current DF",
+          "04": "Select by DF name"
+        }
+      },
+      "p2": {
+        "name": "Selection options (P2)",
+        "enumMap": {
+          "00": "First or only occurrence",
+          "02": "Next occurrence"
+        }
+      }
+    },
+    {
+      "cla": "80",
+      "ins": "A8",
+      "name": "GET PROCESSING OPTIONS",
+      "dataFormat": "ber_tlv",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      }
+    },
+    {
+      "cla": "00",
+      "ins": "B2",
+      "name": "READ RECORD",
+      "dataFormat": "none",
+      "p1": {
+        "name": "Record number (P1)",
+        "numericRecord": true
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "sfiShift": 3,
+        "description": "EMV: SFI = P2 >> 3; low 3 bits encode read mode"
+      }
+    },
+    {
+      "cla": "80",
+      "ins": "AE",
+      "name": "GENERATE AC",
+      "dataFormat": "ber_tlv",
+      "p1": {
+        "name": "Reference control (P1)",
+        "description": "AC type and flags in P1 bits"
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      }
+    },
+    {
+      "cla": "00",
+      "ins": "CA",
+      "name": "GET DATA",
+      "dataFormat": "none",
+      "p1": {
+        "name": "Tag high byte (P1)",
+        "tagReference": true
+      },
+      "p2": {
+        "name": "Tag low byte (P2)",
+        "tagReference": true
+      }
+    },
+    {
+      "cla": "80",
+      "ins": "CA",
+      "name": "GET DATA",
+      "dataFormat": "none",
+      "p1": {
+        "name": "Tag high byte (P1)",
+        "tagReference": true
+      },
+      "p2": {
+        "name": "Tag low byte (P2)",
+        "tagReference": true
+      }
+    },
+    {
+      "cla": "00",
+      "ins": "82",
+      "name": "EXTERNAL AUTHENTICATE",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)"
+      },
+      "p2": {
+        "name": "Reference control (P2)"
+      }
+    },
+    {
+      "cla": "00",
+      "ins": "88",
+      "name": "INTERNAL AUTHENTICATE",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)"
+      },
+      "p2": {
+        "name": "Reference control (P2)"
+      }
+    },
+    {
+      "cla": "00",
+      "ins": "84",
+      "name": "GET CHALLENGE",
+      "dataFormat": "none",
+      "p1": {
+        "name": "Reference control (P1)"
+      },
+      "p2": {
+        "name": "Reference control (P2)"
+      }
+    },
+    {
+      "cla": "00",
+      "ins": "20",
+      "name": "VERIFY",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "Plaintext PIN verification"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)"
+      }
+    },
+    {
+      "cla": "00",
+      "ins": "21",
+      "name": "VERIFY",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)"
+      },
+      "p2": {
+        "name": "Reference control (P2)"
+      }
+    }
+  ],
+  "statusWords": [
+    { "sw": "9000", "meaning": "Normal processing" },
+    { "sw": "6283", "meaning": "Selected file deactivated" },
+    { "sw": "6300", "meaning": "Authentication failed" },
+    { "sw": "6984", "meaning": "Reference data not usable" },
+    { "sw": "6985", "meaning": "Conditions of use not satisfied" },
+    { "sw": "6A81", "meaning": "Function not supported" },
+    { "sw": "6A82", "meaning": "File or application not found" },
+    { "sw": "6A86", "meaning": "Incorrect P1 P2" },
+    { "sw": "6A88", "meaning": "Referenced data not found" },
+    { "sw": "6700", "meaning": "Wrong length" },
+    { "sw": "6982", "meaning": "Security status not satisfied" }
+  ]
+}

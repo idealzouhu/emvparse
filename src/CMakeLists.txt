@@ -13,6 +13,8 @@ endif()
 add_library(EmvParse SHARED
     tlv.cpp
     tlv_parser.cpp
+    apdu_registry.cpp
+    apdu_parser.cpp
     tag_registry.cpp
     tag_registry_ops.cpp
     tlv_formatter.cpp

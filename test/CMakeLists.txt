@@ -15,6 +15,7 @@ add_executable(emvparse_tests
     test_tlv_parser.cpp
     test_tlv_semantics.cpp
     test_tag_registry_ops.cpp
+    test_apdu_parser.cpp
 )
 
 target_compile_features(emvparse_tests PRIVATE cxx_std_11)

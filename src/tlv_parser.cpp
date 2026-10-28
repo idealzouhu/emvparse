@@ -1,4 +1,5 @@
 #include "emvparse/tlv_parser.h"
+#include "emvparse/apdu_parser.h"
 #include "tag_registry.h"
 #include "tlv_formatter.h"
 #include "logger.h"
@@ -10,28 +11,33 @@
 #include <fstream>
 
 TLVParser::TLVParser()
-    : registry_(new TagRegistry()) {
+    : registry_(new TagRegistry()), apduRegistry_(new ApduRegistry()) {
 }
 
 TLVParser::TLVParser(const std::string& manifestPath, const std::string& scheme)
-    : registry_(new TagRegistry()) {
+    : registry_(new TagRegistry()), apduRegistry_(new ApduRegistry()) {
     loadTagRegistry(manifestPath, scheme);
 }
 
 TLVParser::~TLVParser() {
     delete registry_;
+    delete apduRegistry_;
 }
 
 TLVParser::TLVParser(TLVParser&& other) noexcept
-    : registry_(other.registry_) {
+    : registry_(other.registry_), apduRegistry_(other.apduRegistry_) {
     other.registry_ = nullptr;
+    other.apduRegistry_ = nullptr;
 }
 
 TLVParser& TLVParser::operator=(TLVParser&& other) noexcept {
     if (this != &other) {
         delete registry_;
+        delete apduRegistry_;
         registry_ = other.registry_;
+        apduRegistry_ = other.apduRegistry_;
         other.registry_ = nullptr;
+        other.apduRegistry_ = nullptr;
     }
     return *this;
 }
@@ -40,7 +46,12 @@ bool TLVParser::loadTagRegistry(const std::string& manifestPath, const std::stri
     if (!registry_) {
         registry_ = new TagRegistry();
     }
-    return registry_->loadManifest(manifestPath, scheme);
+    if (!apduRegistry_) {
+        apduRegistry_ = new ApduRegistry();
+    }
+    const bool tagsOk = registry_->loadManifest(manifestPath, scheme);
+    apduRegistry_->loadFromManifest(manifestPath);
+    return tagsOk;
 }
 
 void TLVParser::setLogCallback(LogCallback callback) {
@@ -93,28 +104,59 @@ std::string TLVParser::parseHexToJson(const std::string& hexStr) {
     return parseBytesToJson(data);
 }
 
+bool TLVParser::bytesFullyConsumedAsTlv(const std::vector<uint8_t>& data) const {
+    if (data.empty()) {
+        return true;
+    }
+    size_t offset = 0;
+    while (offset < data.size()) {
+        const size_t before = offset;
+        std::vector<uint8_t> mutableData = data;
+        auto tlv = const_cast<TLVParser*>(this)->parseTLV(mutableData, offset);
+        if (!tlv || offset == before) {
+            return false;
+        }
+    }
+    return true;
+}
+
 std::string TLVParser::parseHexWithOptions(
     const std::string& hexStr,
     const emvparse::ParseOutputOptions& options
 ) {
     auto data = hexStringToBytes(hexStr);
     if (data.empty() && !hexStr.empty()) {
-        if (options.format == emvparse::OutputFormat::Json) {
-            return "[]";
-        }
         return {};
     }
 
-    const auto tlvList = parseBytes(data);
+    const auto tlvParseFn = [this](const std::vector<uint8_t>& payload) {
+        return this->parseBytes(payload);
+    };
+    const TlvBodyConsumer tlvConsumer = [this](const std::vector<uint8_t>& body) {
+        return this->bytesFullyConsumedAsTlv(body);
+    };
+
+    const ParsedInputKind kind = ApduParser::classifyInput(
+        data, options.input, apduRegistry_, tlvConsumer);
+
+    ApduParseResult apduResult;
+    if (kind == ParsedInputKind::Capdu) {
+        apduResult = ApduParser::parseCapdu(data, apduRegistry_, tlvParseFn);
+    } else if (kind == ParsedInputKind::Rapdu) {
+        apduResult = ApduParser::parseRapdu(data, apduRegistry_, tlvParseFn);
+    } else {
+        apduResult.kind = ParsedInputKind::Tlv;
+        apduResult.tlvRoots = parseBytes(data);
+    }
 
     switch (options.format) {
     case emvparse::OutputFormat::Table:
-        return TLVFormatter::toTable(tlvList, registry_, options.formatOptions);
+        return ApduParser::formatTable(apduResult, registry_, options.formatOptions);
     case emvparse::OutputFormat::Html:
-        return TLVFormatter::toHtml(tlvList, registry_);
+        return ApduParser::formatHtml(apduResult, registry_);
     case emvparse::OutputFormat::Json:
     default:
-        return parseBytesToJson(data);
+        return ApduParser::formatJson(apduResult, registry_);
     }
 }
 

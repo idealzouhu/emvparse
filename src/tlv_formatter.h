@@ -11,12 +11,32 @@
 class TagRegistry;
 class TagInfo;
 
+struct TableTextRow {
+    enum class Kind { Data, Semantic };
+
+    Kind kind = Kind::Data;
+    int depth = 0;
+    std::string tagHex;
+    std::string name;
+    std::string length;
+    std::string value;
+    std::string semanticText;
+};
+
 class TLVFormatter {
 public:
     static nlohmann::ordered_json toJson(
         const std::shared_ptr<TLV>& tlv,
         TagRegistry* registry = nullptr
     );
+
+    static std::vector<TableTextRow> tableRowsFromRoots(
+        const std::vector<std::shared_ptr<TLV>>& roots,
+        TagRegistry* registry,
+        const emvparse::FormatOptions& options
+    );
+
+    static std::string renderTextTable(const std::vector<TableTextRow>& rows);
 
     static std::string toTable(
         const std::vector<std::shared_ptr<TLV>>& roots,

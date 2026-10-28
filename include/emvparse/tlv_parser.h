@@ -10,6 +10,7 @@
 #include <functional>
 
 class TagRegistry;
+class ApduRegistry;
 
 class EMVPARSE_EXPORT TLVParser {
 public:
@@ -37,12 +38,15 @@ public:
 
     std::string parseHexWithOptions(const std::string& hexStr, const emvparse::ParseOutputOptions& options);
 
+    bool bytesFullyConsumedAsTlv(const std::vector<uint8_t>& data) const;
+
     std::string getTagInfo(const std::string& tagHex) const;
 
     void setLogCallback(LogCallback callback);
 
 private:
     TagRegistry* registry_;
+    class ApduRegistry* apduRegistry_;
 
     std::shared_ptr<TLV> parseTLV(const std::vector<uint8_t>& data, size_t& offset);
 

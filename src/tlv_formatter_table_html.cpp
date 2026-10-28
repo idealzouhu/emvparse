@@ -71,18 +71,6 @@ nlohmann::ordered_json semanticForTlv(
     return ValueSemanticParser::parseValueSemantic(tlv, tagInfo);
 }
 
-struct TableTextRow {
-    enum class Kind { Data, Semantic };
-
-    Kind kind = Kind::Data;
-    int depth = 0;
-    std::string tagHex;
-    std::string name;
-    std::string length;
-    std::string value;
-    std::string semanticText;
-};
-
 void collectTableRows(
     const std::shared_ptr<TLV>& tlv,
     TagRegistry* registry,
@@ -152,6 +140,10 @@ void renderFixedWidthTable(const std::vector<TableTextRow>& rows, std::ostringst
             << std::left << "Value"
             << "\n";
     };
+
+    if (rows.empty()) {
+        return;
+    }
 
     writeHeader();
 
@@ -225,7 +217,7 @@ void appendHtmlRows(
 
 } // namespace
 
-std::string TLVFormatter::toTable(
+std::vector<TableTextRow> TLVFormatter::tableRowsFromRoots(
     const std::vector<std::shared_ptr<TLV>>& roots,
     TagRegistry* registry,
     const emvparse::FormatOptions& options
@@ -234,10 +226,21 @@ std::string TLVFormatter::toTable(
     for (const auto& root : roots) {
         collectTableRows(root, registry, 0, options, rows);
     }
+    return rows;
+}
 
+std::string TLVFormatter::renderTextTable(const std::vector<TableTextRow>& rows) {
     std::ostringstream out;
     renderFixedWidthTable(rows, out);
     return out.str();
+}
+
+std::string TLVFormatter::toTable(
+    const std::vector<std::shared_ptr<TLV>>& roots,
+    TagRegistry* registry,
+    const emvparse::FormatOptions& options
+) {
+    return renderTextTable(tableRowsFromRoots(roots, registry, options));
 }
 
 std::string TLVFormatter::toHtml(
