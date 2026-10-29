@@ -9,31 +9,35 @@ EMV BER-TLV 解析库与命令行工具：默认识别 **纯 TLV**、**C-APDU**�
 ```bash
 emvparse --version
 
+# 在仓库根目录执行。Tag + APDU 命令名依赖 manifest（含 apdu-commands.json）。
+# 等价：export EMVPARSE_REGISTRY="$PWD/registry/manifest.json"
+REG="--registry registry/manifest.json"
+
 # --format json | table | html  （默认 json；html 写文件，常用 -o report.html）
 # --input auto | tlv | capdu | rapdu  （默认 auto）
-# 需要时可加 --scheme EMV|Visa|UPI、--registry path/to/manifest.json
+# 可选 --scheme EMV|Visa|UPI
 
 # 纯 TLV（例如 GPO 响应模板 77…）
-emvparse parse 770E8202198094081001020120010300 --format json
-emvparse parse 770E8202198094081001020120010300 --format table
-emvparse parse 770E8202198094081001020120010300 --format html -o report.html
+emvparse parse 770E8202198094081001020120010300 $REG --format json
+emvparse parse 770E8202198094081001020120010300 $REG --format table
+emvparse parse 770E8202198094081001020120010300 $REG --format html -o report.html
 
 # C-APDU（例如 READ RECORD Case 2、GPO）
-emvparse parse 00B2021400 --format json
-emvparse parse 00B2021400 --format table
-emvparse parse 80A8000002830000 --format json
+emvparse parse 00B2021400 $REG --format json
+emvparse parse 00B2021400 $REG --format table
+emvparse parse 80A8000002830000 $REG --format json
 
 # R-APDU（FCI 响应体 + 状态字 9000）
-emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 --format table
+emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 $REG --format table
 
 # 强制整段按 TLV 解析（不拆 SW），调试用
-emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 --input tlv --format json
+emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 $REG --input tlv --format json
 
 # 单 Tag 注册表查询
-emvparse tag-info 9F33 --scheme EMV
+emvparse tag-info 9F33 $REG --scheme EMV
 
-# 交易脚本（有序 C-APDU / R-APDU 步骤）
-emvparse script --file docs/examples/transaction-script-v1.json --format table
+# 交易脚本（有序 C-APDU / R-APDU 步骤；table 需 APDU 表才有 SELECT/GPO/GAC 等标题）
+emvparse script --file docs/examples/transaction-script-v1.json $REG --format table
 ```
 
 **关于 `--format table`：** 输出是便于阅读的**纯文本**，不一定是统一网格。TLV 为 TAG/Name/Length/Value 列；**C-APDU** 为命令名 + CLA/INS/P1/P2/… 字段块；**R-APDU** 为状态字摘要 + 下方 TLV 行。脚本用 **json**，存档用 **html**。

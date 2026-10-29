@@ -16,7 +16,7 @@ void printScriptUsage(std::ostream& out) {
         << "\n"
         << "Options:\n"
         << "  --format json|table|html  Output format (default: json)\n"
-        << "  --output, -o <path>       Write HTML to file (default: <script>.html; - for stdout)\n"
+        << "  --output, -o <path>       Write to file (html default: <script>.html; - for stdout)\n"
         << "  --semantic active|full    BITFIELD detail for table/html (default: active)\n"
         << "  --scheme <EMV|Visa|UPI>   Registry scheme (default: EMV)\n"
         << "  --registry <path>         manifest.json or registry directory\n"
@@ -146,11 +146,6 @@ int runScriptCommand(int argc, char* argv[]) {
     if (fmt.semanticExplicit && fmt.format == emvparse::OutputFormat::Json) {
         std::cerr << "note: --semantic does not affect JSON output\n";
     }
-    if (fmt.outputExplicit && fmt.format != emvparse::OutputFormat::Html) {
-        std::cerr << "error: --output applies to --format html only\n";
-        return 1;
-    }
-
     const std::string manifest = resolveManifestPath(opts.manifestOverride);
     if (manifest.empty()) {
         std::cerr << "error: manifest not found (set --registry or EMVPARSE_REGISTRY)\n";
@@ -171,24 +166,22 @@ int runScriptCommand(int argc, char* argv[]) {
         return err.empty() ? 3 : (err.find("cannot open") != std::string::npos ? 2 : 3);
     }
 
+    std::string outPath;
     if (fmt.format == emvparse::OutputFormat::Html) {
-        const std::string path =
-            fmt.outputExplicit ? fmt.outputPath : defaultHtmlReportPath(scriptPath);
-        if (path == "-") {
-            std::cout << output;
-        } else {
-            std::string err;
-            if (!writeTextToFile(path, output, err)) {
-                std::cerr << err << "\n";
-                return 4;
-            }
-            std::cerr << "wrote " << path << "\n";
+        outPath = fmt.outputExplicit ? fmt.outputPath : defaultHtmlReportPath(scriptPath);
+    } else if (fmt.outputExplicit) {
+        outPath = fmt.outputPath;
+    }
+
+    if (!outPath.empty() && outPath != "-") {
+        std::string err;
+        if (!writeTextToFile(outPath, output, err)) {
+            std::cerr << err << "\n";
+            return 4;
         }
+        std::cerr << "wrote " << outPath << "\n";
     } else {
-        std::cout << output;
-        if (!output.empty() && output.back() != '\n') {
-            std::cout << "\n";
-        }
+        writeTextToStdout(output);
     }
     return 0;
 }

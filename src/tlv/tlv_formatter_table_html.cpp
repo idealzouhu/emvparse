@@ -1,7 +1,7 @@
 #include "tlv_formatter.h"
 #include "tag_registry.h"
+#include "tlv_semantic_for_tlv.h"
 #include "tlv_semantic_summary.h"
-#include "value_semantic_parser.h"
 #include <sstream>
 #include <iomanip>
 #include <cctype>
@@ -12,23 +12,6 @@ namespace {
 
 std::string indentSpaces(int depth) {
     return std::string(static_cast<size_t>(depth * 2), ' ');
-}
-
-std::string treeValueLengthHex(std::size_t length) {
-    std::ostringstream oss;
-    oss << std::uppercase << std::hex << std::setfill('0');
-    if (length <= 0xFF) {
-        oss << std::setw(2) << length;
-    } else if (length <= 0xFFFF) {
-        oss << std::setw(4) << length;
-    } else {
-        oss << length;
-    }
-    return oss.str();
-}
-
-size_t treeTagNameColumn(int depth, size_t tagWidth, size_t lenWidth) {
-    return indentSpaces(depth).size() + tagWidth + 1 + lenWidth + 4;
 }
 
 std::string spacedHexUpper(const std::string& hex) {
@@ -70,119 +53,6 @@ std::string htmlEscape(const std::string& input) {
         }
     }
     return out;
-}
-
-nlohmann::ordered_json semanticForTlv(
-    const std::shared_ptr<TLV>& tlv,
-    TagRegistry* registry,
-    const std::shared_ptr<TagInfo>& tagInfo
-) {
-    if (!tagInfo) {
-        return nlohmann::ordered_json::object();
-    }
-    if (!tlv->getChildren().empty()) {
-        nlohmann::ordered_json semantic;
-        semantic["raw"] = tlv->valueHex();
-        return semantic;
-    }
-    auto semantic = ValueSemanticParser::parseValueSemantic(tlv, tagInfo);
-    if (registry && tagInfo->type == "LIST" && semantic.contains("dolEntries") &&
-        semantic["dolEntries"].is_array()) {
-        for (auto& entry : semantic["dolEntries"]) {
-            if (!entry.is_object() || !entry.contains("tag")) {
-                continue;
-            }
-            const std::string tag = entry["tag"].get<std::string>();
-            if (auto info = registry->getTagInfo(tag)) {
-                entry["name"] = info->name;
-            }
-        }
-    }
-    return semantic;
-}
-
-void appendTreeSiblingGroup(
-    const std::vector<std::shared_ptr<TLV>>& nodes,
-    TagRegistry* registry,
-    int depth,
-    const emvparse::FormatOptions& options,
-    std::ostringstream& out
-);
-
-void appendTreeOneLine(
-    const std::shared_ptr<TLV>& tlv,
-    TagRegistry* registry,
-    int depth,
-    size_t tagWidth,
-    size_t lenWidth,
-    const emvparse::FormatOptions& options,
-    std::ostringstream& out
-) {
-    const std::string tagHex = tlv->tagHex();
-    std::shared_ptr<TagInfo> tagInfo = registry ? registry->getTagInfo(tagHex) : nullptr;
-    const bool composite = !tlv->getChildren().empty();
-    const std::string name = tagInfo ? tagInfo->name : "";
-    const std::string lenHex = treeValueLengthHex(tlv->getValue().size());
-
-    out << indentSpaces(depth) << std::left << std::setfill(' ') << std::setw(static_cast<int>(tagWidth))
-        << tagHex << " " << std::setw(static_cast<int>(lenWidth)) << lenHex;
-    if (!name.empty()) {
-        out << " -> " << name;
-    }
-    if (!composite) {
-        const std::string& hex = tlv->valueHex();
-        if (!hex.empty()) {
-            out << "  " << hex;
-        }
-    }
-    out << "\n";
-
-    if (!composite && tagInfo) {
-        const auto semantic = semanticForTlv(tlv, registry, tagInfo);
-        const auto mode = effectiveSemanticSummaryMode(tagInfo->type, options.semantic);
-        const auto lines = buildTreeSemanticSummaryLines(semantic, mode);
-        const size_t nameColumn = treeTagNameColumn(depth, tagWidth, lenWidth);
-        for (const auto& line : lines) {
-            out << std::string(nameColumn, ' ') << line.text << "\n";
-        }
-    }
-}
-
-void appendTreeSiblingGroup(
-    const std::vector<std::shared_ptr<TLV>>& nodes,
-    TagRegistry* registry,
-    int depth,
-    const emvparse::FormatOptions& options,
-    std::ostringstream& out
-) {
-    if (nodes.empty()) {
-        return;
-    }
-
-    size_t tagWidth = 2;
-    size_t lenWidth = 2;
-    for (const auto& tlv : nodes) {
-        tagWidth = std::max(tagWidth, tlv->tagHex().size());
-        lenWidth = std::max(lenWidth, treeValueLengthHex(tlv->getValue().size()).size());
-    }
-
-    for (const auto& tlv : nodes) {
-        appendTreeOneLine(tlv, registry, depth, tagWidth, lenWidth, options, out);
-        const auto& children = tlv->getChildren();
-        if (!children.empty()) {
-            appendTreeSiblingGroup(children, registry, depth + 1, options, out);
-        }
-    }
-}
-
-void appendTreeLines(
-    const std::shared_ptr<TLV>& tlv,
-    TagRegistry* registry,
-    int depth,
-    const emvparse::FormatOptions& options,
-    std::ostringstream& out
-) {
-    appendTreeSiblingGroup({tlv}, registry, depth, options, out);
 }
 
 void collectTableRows(
@@ -455,16 +325,6 @@ std::vector<TableTextRow> TLVFormatter::tableRowsFromRoots(
 std::string TLVFormatter::renderTextTable(const std::vector<TableTextRow>& rows) {
     std::ostringstream out;
     renderFixedWidthTable(rows, out);
-    return out.str();
-}
-
-std::string TLVFormatter::toTreeText(
-    const std::vector<std::shared_ptr<TLV>>& roots,
-    TagRegistry* registry,
-    const emvparse::FormatOptions& options
-) {
-    std::ostringstream out;
-    appendTreeSiblingGroup(roots, registry, 0, options, out);
     return out.str();
 }
 

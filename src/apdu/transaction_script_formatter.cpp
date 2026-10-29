@@ -237,7 +237,9 @@ std::string formatDolDataLines(
         return out.str();
     }
     if (!capdu.tlvRoots.empty()) {
-        out << TLVFormatter::toTreeText(capdu.tlvRoots, registry, options);
+        emvparse::FormatOptions treeOpts = options;
+        treeOpts.tree = emvparse::TreeStyle::Compact;
+        out << TLVFormatter::toTreeText(capdu.tlvRoots, registry, treeOpts);
     } else if (!capdu.capdu.dataHex.empty()) {
         out << "  " << capdu.capdu.dataHex;
         if (capdu.capdu.ins == 0xA4 && capdu.capdu.p1 == 0x04) {
@@ -275,7 +277,9 @@ std::string formatResponseBlock(
             }
         }
     } else {
-        out << TLVFormatter::toTreeText(tlvSource, registry, options);
+        emvparse::FormatOptions treeOpts = options;
+        treeOpts.tree = emvparse::TreeStyle::Compact;
+        out << TLVFormatter::toTreeText(tlvSource, registry, treeOpts);
     }
 
     const uint8_t sw1 = static_cast<uint8_t>((rapdu.statusWord >> 8) & 0xFF);

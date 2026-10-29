@@ -9,31 +9,35 @@ EMV BER-TLV parsing library and CLI: parse hex as **plain TLV**, **C-APDU**, or 
 ```bash
 emvparse --version
 
+# Run from the repo root. Tag names and APDU command titles need manifest (incl. apdu-commands.json).
+# Equivalent: export EMVPARSE_REGISTRY="$PWD/registry/manifest.json"
+REG="--registry registry/manifest.json"
+
 # --format json | table | html   (default: json; html writes a file, often -o report.html)
 # --input auto | tlv | capdu | rapdu   (default: auto)
-# Add --scheme EMV|Visa|UPI and --registry path/to/manifest.json when needed.
+# Optional --scheme EMV|Visa|UPI
 
 # Plain TLV (e.g. GPO response template 77…)
-emvparse parse 770E8202198094081001020120010300 --format json
-emvparse parse 770E8202198094081001020120010300 --format table
-emvparse parse 770E8202198094081001020120010300 --format html -o report.html
+emvparse parse 770E8202198094081001020120010300 $REG --format json
+emvparse parse 770E8202198094081001020120010300 $REG --format table
+emvparse parse 770E8202198094081001020120010300 $REG --format html -o report.html
 
 # C-APDU (e.g. READ RECORD Case 2, GET PROCESSING OPTIONS)
-emvparse parse 00B2021400 --format json
-emvparse parse 00B2021400 --format table
-emvparse parse 80A8000002830000 --format json
+emvparse parse 00B2021400 $REG --format json
+emvparse parse 00B2021400 $REG --format table
+emvparse parse 80A8000002830000 $REG --format json
 
 # R-APDU (FCI body + status word 9000)
-emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 --format table
+emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 $REG --format table
 
 # Force whole hex as TLV (no SW split), e.g. for debugging
-emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 --input tlv --format json
+emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000 $REG --input tlv --format json
 
 # Single-tag registry lookup
-emvparse tag-info 9F33 --scheme EMV
+emvparse tag-info 9F33 $REG --scheme EMV
 
-# Transaction script (ordered C-APDU / R-APDU steps)
-emvparse script --file docs/examples/transaction-script-v1.json --format table
+# Transaction script (ordered C-APDU / R-APDU steps; table needs APDU registry for step titles)
+emvparse script --file docs/examples/transaction-script-v1.json $REG --format table
 ```
 
 **About `--format table`:** stdout is **plain text for reading**, not a strict grid. TLV uses fixed columns (TAG / Name / Length / Value); **C-APDU** uses a labeled block (command name, CLA/INS/P1/P2/…); **R-APDU** mixes a status summary with TLV rows when present. Use **json** for scripts, **html** for a saved report.

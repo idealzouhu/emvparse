@@ -2,7 +2,9 @@
 #include "tlv_parser.h"
 #include <emvparse/tlv.h>
 #include "tlv_tree_formatter.h"
+#include "tlv_formatter.h"
 #include "logger.h"
+#include <emvparse/output_options.h>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -712,5 +714,37 @@ TEST_F(TlvParserStructureTest, LogCallback) {
     std::cout << "日志回调功能测试完成" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << std::endl;
+}
+
+TEST(TlvTreeTextTest, CompactCdolOmitsRawHexOnTagLine) {
+    TLVParser parser;
+    ASSERT_TRUE(parser.loadTagRegistry("../../registry/manifest.json", "EMV"));
+    const auto roots = parser.parseHex("8C049F02069F0306");
+    ASSERT_EQ(roots.size(), 1u);
+
+    emvparse::FormatOptions compact;
+    compact.tree = emvparse::TreeStyle::Compact;
+    const std::string tree = TLVFormatter::toTreeText(roots, parser.tagRegistry(), compact);
+    EXPECT_EQ(tree.find("9F02069F0306"), std::string::npos);
+    EXPECT_NE(tree.find("9F02"), std::string::npos);
+    EXPECT_NE(tree.find("->"), std::string::npos);
+}
+
+TEST(TlvTreeTextTest, CompactOmitsPrimitiveHexVerboseShows) {
+    TLVParser parser;
+    ASSERT_TRUE(parser.loadTagRegistry("../../registry/manifest.json", "EMV"));
+    const auto roots = parser.parseHex("95020141");
+    ASSERT_EQ(roots.size(), 1u);
+
+    emvparse::FormatOptions compact;
+    compact.tree = emvparse::TreeStyle::Compact;
+    const std::string compactTree = TLVFormatter::toTreeText(roots, parser.tagRegistry(), compact);
+    EXPECT_NE(compactTree.find("95"), std::string::npos);
+    EXPECT_EQ(compactTree.find("  0141\n"), std::string::npos);
+
+    emvparse::FormatOptions verbose;
+    verbose.tree = emvparse::TreeStyle::Verbose;
+    const std::string verboseTree = TLVFormatter::toTreeText(roots, parser.tagRegistry(), verbose);
+    EXPECT_NE(verboseTree.find("  0141"), std::string::npos);
 }
 

@@ -22,6 +22,7 @@ set(EMVPARSE_SOURCES
     tlv/cvm_list_parser.cpp
     tlv/value_semantic_parser.cpp
     tlv/tlv_semantic_summary.cpp
+    tlv/tlv_semantic_for_tlv.cpp
     tlv/tlv_formatter.cpp
     tlv/tlv_formatter_table_html.cpp
     tlv/tlv_tree_formatter.cpp

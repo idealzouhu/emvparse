@@ -45,14 +45,14 @@ function toggleSemantic(id){
 <body>
 <h1>PBOC debit — PSE select, GPO, records, DDA, ARQC/TC</h1>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>SELECT</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">SELECT PSE (1PAY.SYS.DDF01)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">A4</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">04</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">00</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">A4</td><td class="field-meaning">SELECT</td></tr>
+<tr><th>P1</th><td class="field-hex">04</td><td class="field-meaning">Select by DF name</td></tr>
+<tr><th>P2</th><td class="field-hex">00</td><td class="field-meaning">First or only occurrence</td></tr>
 <tr><th>Lc</th><td class="field-hex">0E</td><td class="field-meaning">14 bytes</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 <tr><th>Data</th><td class="field-hex">31 50 41 59 2E 53 59 53 2E 44 44 46 30 31</td><td class="field-meaning">1PAY.SYS.DDF01</td></tr>
@@ -69,17 +69,17 @@ function toggleSemantic(id){
 <tr><td class="tlv-gutter"></td><td class="tlv-gutter"></td><td class="tlv-tag">5F2D</td><td class="tlv-name">Language Preference</td><td class="tlv-len">2</td><td class="value-cell">7A 68</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-gutter"></td><td class="tlv-tag">9F11</td><td class="tlv-name">Issuer Code Table Index</td><td class="tlv-len">1</td><td class="value-cell">01<br>enum: UNKNOWN (01)</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=1, record 1)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">01</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">0C</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">01</td><td class="field-meaning">Record number 1</td></tr>
+<tr><th>P2</th><td class="field-hex">0C</td><td class="field-meaning">SFI 1 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -94,17 +94,17 @@ function toggleSemantic(id){
 <tr><td class="tlv-gutter"></td><td class="tlv-gutter"></td><td class="tlv-tag">9F12</td><td class="tlv-name">Application Preferred Name</td><td class="tlv-len">10</td><td class="value-cell">50 42 4F 43 20 44 45 42 49 54<br>text: PBOC DEBIT</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-gutter"></td><td class="tlv-tag">87</td><td class="tlv-name">Application Priority Indicator</td><td class="tlv-len">1</td><td class="value-cell">01</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=1, record 2)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">02</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">0C</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">02</td><td class="field-meaning">Record number 2</td></tr>
+<tr><th>P2</th><td class="field-hex">0C</td><td class="field-meaning">SFI 1 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -112,14 +112,14 @@ function toggleSemantic(id){
 <div class="apdu-summary"><strong>Status</strong> 6A83 - Status warning or processing state</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>SELECT</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">SELECT (A000000333010101)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">A4</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">04</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">00</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">A4</td><td class="field-meaning">SELECT</td></tr>
+<tr><th>P1</th><td class="field-hex">04</td><td class="field-meaning">Select by DF name</td></tr>
+<tr><th>P2</th><td class="field-hex">00</td><td class="field-meaning">First or only occurrence</td></tr>
 <tr><th>Lc</th><td class="field-hex">08</td><td class="field-meaning">8 bytes</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 <tr><th>Data</th><td class="field-hex">A0 00 00 03 33 01 01 01</td><td></td></tr>
@@ -142,39 +142,44 @@ function toggleSemantic(id){
 <tr><td class="tlv-gutter"></td><td class="tlv-gutter"></td><td class="tlv-gutter"></td><td class="tlv-tag">9F4D</td><td class="tlv-name">Log Entry</td><td class="tlv-len">2</td><td class="value-cell">0B 0A</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-gutter"></td><td class="tlv-gutter"></td><td class="tlv-tag">DF4D</td><td class="tlv-name"></td><td class="tlv-len">2</td><td class="value-cell">0C 0A</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>GET PROCESSING OPTIONS</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">GET PROCESSING OPTIONS</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">80</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">A8</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">00</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">A8</td><td class="field-meaning">GET PROCESSING OPTIONS</td></tr>
+<tr><th>P1</th><td class="field-hex">00</td><td class="field-meaning">No special options</td></tr>
+<tr><th>P2</th><td class="field-hex">00</td><td class="field-meaning">No special options</td></tr>
 <tr><th>Lc</th><td class="field-hex">0C</td><td class="field-meaning">12 bytes</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>Data</th><td class="field-hex">83 0A 00 00 00 00 00 00 01 01 56 00</td><td></td></tr>
+<tr><th>9F7A</th><td class="field-hex">00</td><td class="field-meaning">1 bytes</td></tr>
+<tr><th>9F02</th><td class="field-hex">00 00 00 00 00 01</td><td class="field-meaning">6 bytes — Amount, Authorised (Numeric)</td></tr>
+<tr><th>5F2A</th><td class="field-hex">01 56</td><td class="field-meaning">2 bytes — Transaction Currency Code</td></tr>
+<tr><th>DF69</th><td class="field-hex">00</td><td class="field-meaning">1 bytes</td></tr>
 </table>
 <h3>Response</h3>
 <div class="tlv-wrap"><table class="tlv-table">
-<colgroup><col class="tlv-col-indent"><col class="tlv-col-name"><col class="tlv-col-len"><col class="tlv-col-value"></colgroup>
-<thead><tr><th colspan="1"></th><th class="tlv-name">Name</th><th class="tlv-len">Length</th><th class="tlv-value">Value</th></tr></thead>
+<colgroup><col class="tlv-col-indent"><col class="tlv-col-indent"><col class="tlv-col-name"><col class="tlv-col-len"><col class="tlv-col-value"></colgroup>
+<thead><tr><th colspan="2"></th><th class="tlv-name">Name</th><th class="tlv-len">Length</th><th class="tlv-value">Value</th></tr></thead>
 <tbody>
-<tr><td class="tlv-tag">80</td><td class="tlv-name">Response Message Template Format 1</td><td class="tlv-len">18</td><td class="value-cell">7C 00 08 01 02 00 10 01 03 01 18 01 02 00 20 01 01 00</td></tr>
+<tr><td class="tlv-tag">80</td><td class="tlv-indent-pad"></td><td class="tlv-name">Response Message Template Format 1</td><td class="tlv-len">18</td><td class="value-cell"></td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">82</td><td class="tlv-name">Application Interchange Profile</td><td class="tlv-len">2</td><td class="value-cell">7C 00<br><strong>byte 1 bit 7 = 1  SDA supported</strong><br><span class="semantic-toggle" onclick="toggleSemantic('sem-82-1')" title="Click to expand/collapse details"><strong>Details</strong></span><div id="summary-sem-82-1" class="semantic-summary">byte 1 bit 6 = 1  DDA supported<br>byte 1 bit 5 = 1  Cardholder verification is supported<br>byte 1 bit 4 = 1  Terminal risk management is to be performed<br>byte 1 bit 3 = 1  Issuer authentication is supported<br></div><div id="full-sem-82-1" class="semantic-full" style="display:none"><span class="inactive-bit">byte 1 bit 8 = 0  RFU</span><br>byte 1 bit 7 = 1  SDA supported<br>byte 1 bit 6 = 1  DDA supported<br>byte 1 bit 5 = 1  Cardholder verification is supported<br>byte 1 bit 4 = 1  Terminal risk management is to be performed<br>byte 1 bit 3 = 1  Issuer authentication is supported<br><span class="inactive-bit">byte 1 bit 2 = 0  On device cardholder verification not supported</span><br><span class="inactive-bit">byte 1 bit 1 = 0  RFU</span><br><span class="inactive-bit">byte 2 bit 8 = 0  RFU</span><br><span class="inactive-bit">byte 2 bit 7 = 0  RFU</span><br><span class="inactive-bit">byte 2 bit 6 = 0  RFU</span><br><span class="inactive-bit">byte 2 bit 5 = 0  RFU</span><br><span class="inactive-bit">byte 2 bit 4 = 0  RFU</span><br><span class="inactive-bit">byte 2 bit 3 = 0  RFU</span><br><span class="inactive-bit">byte 2 bit 2 = 0  RFU</span><br><span class="inactive-bit">byte 2 bit 1 = 0  EMV mode not supported</span><br></div></td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">94</td><td class="tlv-name">Application File Locator (AFL)</td><td class="tlv-len">16</td><td class="value-cell">08 01 02 00 10 01 03 01 18 01 02 00 20 01 01 00<br>SFI 1: records 1-2, offline auth records 0<br>SFI 2: records 1-3, offline auth records 1<br>SFI 3: records 1-2, offline auth records 0<br>SFI 4: records 1-1, offline auth records 0<br>4 file(s), 8 record(s) referenced</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=1, record 1)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">01</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">0C</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">01</td><td class="field-meaning">Record number 1</td></tr>
+<tr><th>P2</th><td class="field-hex">0C</td><td class="field-meaning">SFI 1 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -185,17 +190,17 @@ function toggleSemantic(id){
 <tr><td class="tlv-tag">70</td><td class="tlv-indent-pad"></td><td class="tlv-name">READ RECORD Response Message Template</td><td class="tlv-len">20</td><td class="value-cell"></td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">57</td><td class="tlv-name">Track 2 Equivalent Data</td><td class="tlv-len">18</td><td class="value-cell">62 12 14 23 00 00 00 00 06 5D 29 03 22 04 93 90 31 12</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=1, record 2)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">02</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">0C</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">02</td><td class="field-meaning">Record number 2</td></tr>
+<tr><th>P2</th><td class="field-hex">0C</td><td class="field-meaning">SFI 1 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -206,17 +211,17 @@ function toggleSemantic(id){
 <tr><td class="tlv-tag">70</td><td class="tlv-indent-pad"></td><td class="tlv-name">READ RECORD Response Message Template</td><td class="tlv-len">5</td><td class="value-cell"></td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">5F20</td><td class="tlv-name">Cardholder Name</td><td class="tlv-len">2</td><td class="value-cell">20 20<br>text:   </td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=2, record 1)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">01</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">14</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">01</td><td class="field-meaning">Record number 1</td></tr>
+<tr><th>P2</th><td class="field-hex">14</td><td class="field-meaning">SFI 2 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -229,23 +234,23 @@ function toggleSemantic(id){
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">5A</td><td class="tlv-name">Application Primary Account Number (PAN)</td><td class="tlv-len">10</td><td class="value-cell">62 12 14 23 00 00 00 00 06 5F<br>numeric: 6212142300000000065</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">5F34</td><td class="tlv-name">Application Primary Account Number (PAN) Sequence Number</td><td class="tlv-len">1</td><td class="value-cell">00<br>numeric: 00</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">9F07</td><td class="tlv-name">Application Usage Control</td><td class="tlv-len">2</td><td class="value-cell">FF 00</td></tr>
-<tr><td class="tlv-gutter"></td><td class="tlv-tag">8E</td><td class="tlv-name">Cardholder Verification Method (CVM) List</td><td class="tlv-len">12</td><td class="value-cell">00 00 00 00 00 00 00 00 42 03 1F 00</td></tr>
-<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F0D</td><td class="tlv-name">Issuer Action Code – Default</td><td class="tlv-len">5</td><td class="value-cell">D0 60 1C A8 00</td></tr>
-<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F0E</td><td class="tlv-name">Issuer Action Code – Denial</td><td class="tlv-len">5</td><td class="value-cell">00 10 80 00 00</td></tr>
-<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F0F</td><td class="tlv-name">Issuer Action Code – Online</td><td class="tlv-len">5</td><td class="value-cell">D0 68 1C F8 00</td></tr>
-<tr><td class="tlv-gutter"></td><td class="tlv-tag">5F28</td><td class="tlv-name">Issuer Country Code (numeric)</td><td class="tlv-len">2</td><td class="value-cell">01 56<br>numeric: 0156</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">8E</td><td class="tlv-name">Cardholder Verification Method (CVM) List</td><td class="tlv-len">12</td><td class="value-cell">00 00 00 00 00 00 00 00 42 03 1F 00<br>Amount X: 0<br>Amount Y: 0<br>#1  42/03  Enciphered PIN verified online; If terminal supports the CVM<br>#2  1F/00  No CVM required; Always</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F0D</td><td class="tlv-name">Issuer Action Code - Default</td><td class="tlv-len">5</td><td class="value-cell">D0 60 1C A8 00</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F0E</td><td class="tlv-name">Issuer Action Code - Denial</td><td class="tlv-len">5</td><td class="value-cell">00 10 80 00 00</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F0F</td><td class="tlv-name">Issuer Action Code - Online</td><td class="tlv-len">5</td><td class="value-cell">D0 68 1C F8 00</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">5F28</td><td class="tlv-name">Issuer Country Code (numeric)</td><td class="tlv-len">2</td><td class="value-cell">01 56<br>enum: China</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=2, record 2)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">02</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">14</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">02</td><td class="field-meaning">Record number 2</td></tr>
+<tr><th>P2</th><td class="field-hex">14</td><td class="field-meaning">SFI 2 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -257,17 +262,17 @@ function toggleSemantic(id){
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">9F46</td><td class="tlv-name">Integrated Circuit Card (ICC) Public Key Certificate</td><td class="tlv-len">176</td><td class="value-cell">06 83 F8 40 B4 F2 44 B2 DB DD 05 B8 62 A8 60 1C 6B 01 01 34 B3 93 C2 CB 82 A1 6E 7D C3 6F 06 EF E4 D0 7E FF 54 97 80 62 5F 33 64 F0 2C 17 0A 99 30 C0 E0 74 5F DD 96 55 8D 64 30 41 85 77 C0 ED B7 0A 03 22 9E 35 1F F3 48 64 C3 C1 80 47 17 FE 33 E3 D1 3D 09 C2 18 78 C2 D2 CA EB EF 91 75 BE 06 04 B4 49 7C 59 EB FB 00 F2 52 6E 66 57 6D 15 76 FB EF 84 15 51 89 75 2C 74 C4 D6 62 8C AC 56 EA 55 9D 2D 73 AD B1 A9 A0 DB 78 A3 21 BA 51 71 3E 7A 02 F2 3C 6A E1 04 8D 76 B4 A2 10 5F 6F E6 5F FC D7 CD E9 D3 FD 70 5A B3 78 77 2C 09 E1 2F</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">9F47</td><td class="tlv-name">Integrated Circuit Card (ICC) Public Key Exponent</td><td class="tlv-len">1</td><td class="value-cell">03</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=2, record 3)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">03</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">14</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">03</td><td class="field-meaning">Record number 3</td></tr>
+<tr><th>P2</th><td class="field-hex">14</td><td class="field-meaning">SFI 2 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -280,17 +285,17 @@ function toggleSemantic(id){
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">5F25</td><td class="tlv-name">Application Effective Date</td><td class="tlv-len">3</td><td class="value-cell">15 01 01<br>date: 2015-01-01</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">9F4A</td><td class="tlv-name">Static Data Authentication Tag List</td><td class="tlv-len">1</td><td class="value-cell">82</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=3, record 1)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">01</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">1C</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">01</td><td class="field-meaning">Record number 1</td></tr>
+<tr><th>P2</th><td class="field-hex">1C</td><td class="field-meaning">SFI 3 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -301,17 +306,17 @@ function toggleSemantic(id){
 <tr><td class="tlv-tag">70</td><td class="tlv-indent-pad"></td><td class="tlv-name">READ RECORD Response Message Template</td><td class="tlv-len">251</td><td class="value-cell"></td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">90</td><td class="tlv-name">Biometric Solution ID</td><td class="tlv-len">248</td><td class="value-cell">00 CA 2A D8 A6 A3 74 57 BE 78 C5 7B FB 18 E7 AD A7 24 59 37 C0 AA 09 B0 CD 6B 79 77 F2 76 44 E2 13 13 63 C9 39 38 7F 64 C3 59 8C 20 AA 8B 36 56 47 81 81 BE E3 8D 45 8A B4 30 E8 DC 46 53 09 4D 59 2B 6A 69 B6 3F 5F F4 46 E7 4C CA B4 71 04 E4 04 2A C6 3A 28 FD B3 B7 DD 52 2E 5E 22 2F FE A9 95 B9 55 F4 13 08 0A A2 FE 56 26 3E 5E CC 2F 77 15 BB 97 8A E1 08 1A 56 AE 84 91 BA 17 9B D3 7A FB 47 23 DE 96 51 8B CD 4D 18 A1 69 6D 68 21 96 05 60 ED CD C7 58 DE 96 4B 6D 29 4B 2C DD 89 8D C3 C8 B1 38 E0 65 8A EB D4 C1 9A 4C 3D 5E 39 E0 AF 45 41 76 79 46 BD DE 5D 15 D2 04 EC 01 24 37 D8 D0 66 74 7F 29 E1 A0 D0 D7 91 70 20 D3 DA 5A 93 F7 14 A4 34 07 77 85 7C 1B 3E 87 6B 27 80 92 AA 01 09 FC 80 67 06 B6 BE 64 9E CB B1 EA AD 85 87 99 F6 40 39 CB 24 73</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=3, record 2)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">02</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">1C</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">02</td><td class="field-meaning">Record number 2</td></tr>
+<tr><th>P2</th><td class="field-hex">1C</td><td class="field-meaning">SFI 3 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -328,17 +333,17 @@ function toggleSemantic(id){
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">8F</td><td class="tlv-name">Certification Authority Public Key Index (ICC)</td><td class="tlv-len">1</td><td class="value-cell">0B<br>numeric: 0</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">9F32</td><td class="tlv-name">Issuer Public Key Exponent</td><td class="tlv-len">1</td><td class="value-cell">03</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>READ RECORD</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">READ RECORD (SFI=4, record 1)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">B2</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">01</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">24</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">B2</td><td class="field-meaning">READ RECORD</td></tr>
+<tr><th>P1</th><td class="field-hex">01</td><td class="field-meaning">Record number 1</td></tr>
+<tr><th>P2</th><td class="field-hex">24</td><td class="field-meaning">SFI 4 (read mode bits 4)</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
 </table>
 <h3>Response</h3>
@@ -350,88 +355,116 @@ function toggleSemantic(id){
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">9F14</td><td class="tlv-name">Lower Consecutive Offline Limit</td><td class="tlv-len">1</td><td class="value-cell">00<br>numeric: 00</td></tr>
 <tr><td class="tlv-gutter"></td><td class="tlv-tag">9F23</td><td class="tlv-name">Upper Consecutive Offline Limit</td><td class="tlv-len">1</td><td class="value-cell">00<br>numeric: 00</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>INTERNAL AUTHENTICATE</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">INTERNAL AUTHENTICATE</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">88</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">00</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">88</td><td class="field-meaning">INTERNAL AUTHENTICATE</td></tr>
+<tr><th>P1</th><td class="field-hex">00</td><td class="field-meaning">Reference control (P1) 00</td></tr>
+<tr><th>P2</th><td class="field-hex">00</td><td class="field-meaning">Reference control (P2) 00</td></tr>
 <tr><th>Lc</th><td class="field-hex">04</td><td class="field-meaning">4 bytes</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>Data</th><td class="field-hex">F4 6C F0 5A</td><td></td></tr>
+<tr><th>9F37</th><td class="field-hex">F4 6C F0 5A</td><td class="field-meaning">4 bytes — Unpredictable Number</td></tr>
 </table>
 <h3>Response</h3>
 <div class="tlv-wrap"><table class="tlv-table">
-<colgroup><col class="tlv-col-indent"><col class="tlv-col-name"><col class="tlv-col-len"><col class="tlv-col-value"></colgroup>
-<thead><tr><th colspan="1"></th><th class="tlv-name">Name</th><th class="tlv-len">Length</th><th class="tlv-value">Value</th></tr></thead>
+<colgroup><col class="tlv-col-indent"><col class="tlv-col-indent"><col class="tlv-col-name"><col class="tlv-col-len"><col class="tlv-col-value"></colgroup>
+<thead><tr><th colspan="2"></th><th class="tlv-name">Name</th><th class="tlv-len">Length</th><th class="tlv-value">Value</th></tr></thead>
 <tbody>
-<tr><td class="tlv-tag">80</td><td class="tlv-name">Response Message Template Format 1</td><td class="tlv-len">128</td><td class="value-cell">69 3D 42 6C 0B 49 8B 1C ED 34 29 73 77 3B 8C 8E 55 78 3A 08 11 69 B4 9F D5 C4 BE C1 86 BB CE 47 7E 05 82 5E 0B FA 8C A4 64 44 2E 08 75 0A 64 20 29 A4 E6 25 00 67 9C 69 A4 CA C8 15 07 1A 22 EC 4C 43 AC 16 B8 48 CD 38 9B EF 7A 63 34 C1 0B B6 BC 00 A7 F4 B2 0A 01 EE C7 3C C8 1E 74 A5 58 E4 03 4B 22 F0 C6 75 80 1B 90 A8 CC E4 B4 AA A8 F7 D5 4D 77 01 AB F9 E1 AB 85 A7 1A A0 BB 1E E1 02</td></tr>
+<tr><td class="tlv-tag">80</td><td class="tlv-indent-pad"></td><td class="tlv-name">Response Message Template Format 1</td><td class="tlv-len">128</td><td class="value-cell"></td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F4B</td><td class="tlv-name">Signed Dynamic Application Data</td><td class="tlv-len">128</td><td class="value-cell">69 3D 42 6C 0B 49 8B 1C ED 34 29 73 77 3B 8C 8E 55 78 3A 08 11 69 B4 9F D5 C4 BE C1 86 BB CE 47 7E 05 82 5E 0B FA 8C A4 64 44 2E 08 75 0A 64 20 29 A4 E6 25 00 67 9C 69 A4 CA C8 15 07 1A 22 EC 4C 43 AC 16 B8 48 CD 38 9B EF 7A 63 34 C1 0B B6 BC 00 A7 F4 B2 0A 01 EE C7 3C C8 1E 74 A5 58 E4 03 4B 22 F0 C6 75 80 1B 90 A8 CC E4 B4 AA A8 F7 D5 4D 77 01 AB F9 E1 AB 85 A7 1A A0 BB 1E E1 02</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>GENERATE AC</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">GENERATE AC (AC type and flags in P1 bits)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">80</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">AE</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">80</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">00</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">AE</td><td class="field-meaning">GENERATE AC</td></tr>
+<tr><th>P1</th><td class="field-hex">80</td><td class="field-meaning">AC type and flags in P1 bits</td></tr>
+<tr><th>P2</th><td class="field-hex">00</td><td class="field-meaning">No special options</td></tr>
 <tr><th>Lc</th><td class="field-hex">34</td><td class="field-meaning">52 bytes</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>Data</th><td class="field-hex">00 00 00 00 00 01 00 00 00 00 00 00 01 56 00 00 04 80 00 01 56 26 10 15 00 F4 6C F0 5A 09 18 37 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</td><td></td></tr>
+<tr><th>9F02</th><td class="field-hex">00 00 00 00 00 01</td><td class="field-meaning">6 bytes — Amount, Authorised (Numeric)</td></tr>
+<tr><th>9F03</th><td class="field-hex">00 00 00 00 00 00</td><td class="field-meaning">6 bytes — Amount, Other (Numeric)</td></tr>
+<tr><th>9F1A</th><td class="field-hex">01 56</td><td class="field-meaning">2 bytes — Terminal Country Code</td></tr>
+<tr><th>95</th><td class="field-hex">00 00 04 80 00</td><td class="field-meaning">5 bytes — Terminal Verification Results</td></tr>
+<tr><th>5F2A</th><td class="field-hex">01 56</td><td class="field-meaning">2 bytes — Transaction Currency Code</td></tr>
+<tr><th>9A</th><td class="field-hex">26 10 15</td><td class="field-meaning">3 bytes — Transaction Date</td></tr>
+<tr><th>9C</th><td class="field-hex">00</td><td class="field-meaning">1 bytes — Transaction Type</td></tr>
+<tr><th>9F37</th><td class="field-hex">F4 6C F0 5A</td><td class="field-meaning">4 bytes — Unpredictable Number</td></tr>
+<tr><th>9F21</th><td class="field-hex">09 18 37</td><td class="field-meaning">3 bytes — Transaction Time</td></tr>
+<tr><th>9F4E</th><td class="field-hex">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</td><td class="field-meaning">20 bytes — Merchant Name and Location</td></tr>
 </table>
 <h3>Response</h3>
 <div class="tlv-wrap"><table class="tlv-table">
-<colgroup><col class="tlv-col-indent"><col class="tlv-col-name"><col class="tlv-col-len"><col class="tlv-col-value"></colgroup>
-<thead><tr><th colspan="1"></th><th class="tlv-name">Name</th><th class="tlv-len">Length</th><th class="tlv-value">Value</th></tr></thead>
+<colgroup><col class="tlv-col-indent"><col class="tlv-col-indent"><col class="tlv-col-name"><col class="tlv-col-len"><col class="tlv-col-value"></colgroup>
+<thead><tr><th colspan="2"></th><th class="tlv-name">Name</th><th class="tlv-len">Length</th><th class="tlv-value">Value</th></tr></thead>
 <tbody>
-<tr><td class="tlv-tag">80</td><td class="tlv-name">Response Message Template Format 1</td><td class="tlv-len">30</td><td class="value-cell">80 02 6F 86 0E 17 79 BB 9F 7F 8B 07 01 01 03 A0 B8 06 01 0A 01 00 00 00 00 00 F2 AC D9 84</td></tr>
+<tr><td class="tlv-tag">80</td><td class="tlv-indent-pad"></td><td class="tlv-name">Response Message Template Format 1</td><td class="tlv-len">30</td><td class="value-cell"></td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F27</td><td class="tlv-name">Cryptogram Information Data</td><td class="tlv-len">1</td><td class="value-cell">80<br><strong>byte 1 bit 8 =   ARQC (Authorisation Request Cryptogram - online authorisation requested)</strong><br><span class="semantic-toggle" onclick="toggleSemantic('sem-9F27-1')" title="Click to expand/collapse details"><strong>Details</strong></span><div id="summary-sem-9F27-1" class="semantic-summary"></div><div id="full-sem-9F27-1" class="semantic-full" style="display:none">byte 1 bit 8 =   ARQC (Authorisation Request Cryptogram - online authorisation requested)<br><span class="inactive-bit">byte 1 bit 4 =   No advice required</span><br><span class="inactive-bit">byte 1 bit 3 =   No information given</span><br></div></td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F36</td><td class="tlv-name">Application Transaction Counter (ATC)</td><td class="tlv-len">2</td><td class="value-cell">02 6F<br>numeric: 623</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F26</td><td class="tlv-name">Application Cryptogram</td><td class="tlv-len">8</td><td class="value-cell">86 0E 17 79 BB 9F 7F 8B</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F10</td><td class="tlv-name">Issuer Application Data</td><td class="tlv-len">19</td><td class="value-cell">07 01 01 03 A0 B8 06 01 0A 01 00 00 00 00 00 F2 AC D9 84</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>EXTERNAL AUTHENTICATE</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">EXTERNAL AUTHENTICATE</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">82</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">00</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">82</td><td class="field-meaning">EXTERNAL AUTHENTICATE</td></tr>
+<tr><th>P1</th><td class="field-hex">00</td><td class="field-meaning">Reference control (P1) 00</td></tr>
+<tr><th>P2</th><td class="field-hex">00</td><td class="field-meaning">Reference control (P2) 00</td></tr>
 <tr><th>Lc</th><td class="field-hex">08</td><td class="field-meaning">8 bytes</td></tr>
 <tr><th>Data</th><td class="field-hex">01 02 03 04 05 06 07 08</td><td></td></tr>
 </table>
 <h3>Response</h3>
 <p class="response-note">(status word only)</p>
-<div class="apdu-summary"><strong>Status</strong> 6700 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 6700 - Wrong length</div>
 </section>
 <section class="script-step">
-<h2>C-APDU</h2>
+<h2>GENERATE AC</h2>
 <h3>Send</h3>
-<p class="send-summary">C-APDU</p>
+<p class="send-summary">GENERATE AC (AC type and flags in P1 bits)</p>
 <table class="capdu-fields">
 <tr><th>CLA</th><td class="field-hex">80</td><td></td></tr>
-<tr><th>INS</th><td class="field-hex">AE</td><td></td></tr>
-<tr><th>P1</th><td class="field-hex">40</td><td></td></tr>
-<tr><th>P2</th><td class="field-hex">00</td><td></td></tr>
+<tr><th>INS</th><td class="field-hex">AE</td><td class="field-meaning">GENERATE AC</td></tr>
+<tr><th>P1</th><td class="field-hex">40</td><td class="field-meaning">AC type and flags in P1 bits</td></tr>
+<tr><th>P2</th><td class="field-hex">00</td><td class="field-meaning">No special options</td></tr>
 <tr><th>Lc</th><td class="field-hex">36</td><td class="field-meaning">54 bytes</td></tr>
 <tr><th>Le</th><td class="field-hex">00</td><td></td></tr>
-<tr><th>Data</th><td class="field-hex">30 30 00 00 00 00 00 01 00 00 00 00 00 00 01 56 00 00 04 80 40 01 56 26 10 15 00 F4 6C F0 5A 09 18 37 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</td><td></td></tr>
+<tr><th>8A</th><td class="field-hex">30 30</td><td class="field-meaning">2 bytes — Authorisation Response Code</td></tr>
+<tr><th>9F02</th><td class="field-hex">00 00 00 00 00 01</td><td class="field-meaning">6 bytes — Amount, Authorised (Numeric)</td></tr>
+<tr><th>9F03</th><td class="field-hex">00 00 00 00 00 00</td><td class="field-meaning">6 bytes — Amount, Other (Numeric)</td></tr>
+<tr><th>9F1A</th><td class="field-hex">01 56</td><td class="field-meaning">2 bytes — Terminal Country Code</td></tr>
+<tr><th>95</th><td class="field-hex">00 00 04 80 40</td><td class="field-meaning">5 bytes — Terminal Verification Results</td></tr>
+<tr><th>5F2A</th><td class="field-hex">01 56</td><td class="field-meaning">2 bytes — Transaction Currency Code</td></tr>
+<tr><th>9A</th><td class="field-hex">26 10 15</td><td class="field-meaning">3 bytes — Transaction Date</td></tr>
+<tr><th>9C</th><td class="field-hex">00</td><td class="field-meaning">1 bytes — Transaction Type</td></tr>
+<tr><th>9F37</th><td class="field-hex">F4 6C F0 5A</td><td class="field-meaning">4 bytes — Unpredictable Number</td></tr>
+<tr><th>9F21</th><td class="field-hex">09 18 37</td><td class="field-meaning">3 bytes — Transaction Time</td></tr>
+<tr><th>9F4E</th><td class="field-hex">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</td><td class="field-meaning">20 bytes — Merchant Name and Location</td></tr>
 </table>
 <h3>Response</h3>
 <div class="tlv-wrap"><table class="tlv-table">
-<colgroup><col class="tlv-col-indent"><col class="tlv-col-name"><col class="tlv-col-len"><col class="tlv-col-value"></colgroup>
-<thead><tr><th colspan="1"></th><th class="tlv-name">Name</th><th class="tlv-len">Length</th><th class="tlv-value">Value</th></tr></thead>
+<colgroup><col class="tlv-col-indent"><col class="tlv-col-indent"><col class="tlv-col-name"><col class="tlv-col-len"><col class="tlv-col-value"></colgroup>
+<thead><tr><th colspan="2"></th><th class="tlv-name">Name</th><th class="tlv-len">Length</th><th class="tlv-value">Value</th></tr></thead>
 <tbody>
-<tr><td class="tlv-tag">80</td><td class="tlv-name">Response Message Template Format 1</td><td class="tlv-len">30</td><td class="value-cell">40 02 6F 7B 95 00 2A 00 49 2D B8 07 01 01 03 60 BC 06 01 0A 01 00 00 00 00 00 F2 AC D9 84</td></tr>
+<tr><td class="tlv-tag">80</td><td class="tlv-indent-pad"></td><td class="tlv-name">Response Message Template Format 1</td><td class="tlv-len">30</td><td class="value-cell"></td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F27</td><td class="tlv-name">Cryptogram Information Data</td><td class="tlv-len">1</td><td class="value-cell">40<br><strong>byte 1 bit 8 =   TC (Transaction Certificate - approved offline)</strong><br><span class="semantic-toggle" onclick="toggleSemantic('sem-9F27-1')" title="Click to expand/collapse details"><strong>Details</strong></span><div id="summary-sem-9F27-1" class="semantic-summary"></div><div id="full-sem-9F27-1" class="semantic-full" style="display:none">byte 1 bit 8 =   TC (Transaction Certificate - approved offline)<br><span class="inactive-bit">byte 1 bit 4 =   No advice required</span><br><span class="inactive-bit">byte 1 bit 3 =   No information given</span><br></div></td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F36</td><td class="tlv-name">Application Transaction Counter (ATC)</td><td class="tlv-len">2</td><td class="value-cell">02 6F<br>numeric: 623</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F26</td><td class="tlv-name">Application Cryptogram</td><td class="tlv-len">8</td><td class="value-cell">7B 95 00 2A 00 49 2D B8</td></tr>
+<tr><td class="tlv-gutter"></td><td class="tlv-tag">9F10</td><td class="tlv-name">Issuer Application Data</td><td class="tlv-len">19</td><td class="value-cell">07 01 01 03 60 BC 06 01 0A 01 00 00 00 00 00 F2 AC D9 84</td></tr>
 </tbody></table></div>
-<div class="apdu-summary"><strong>Status</strong> 9000 - Status warning or processing state</div>
+<div class="apdu-summary"><strong>Status</strong> 9000 - Normal processing</div>
 </section>
 </body></html>
