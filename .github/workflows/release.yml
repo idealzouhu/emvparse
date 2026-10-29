@@ -104,8 +104,27 @@ jobs:
           ver="${{ steps.ver.outputs.version }}"
           tar -czf "emvparse-${ver}-${{ matrix.asset_name }}.tar.gz" -C install .
 
+      - name: Extract release notes from CHANGELOG
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          ver="${{ steps.ver.outputs.version }}"
+          awk -v ver="$ver" '
+            BEGIN { found=0 }
+            /^## \[/ {
+              if (found) exit
+              if ($0 ~ "\\[" ver "\\]") { found=1; print; next }
+            }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if ! grep -qE '^### ' release-notes.md; then
+            echo "No CHANGELOG section for version ${ver}"
+            exit 1
+          fi
+
       - uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
+          body_path: release-notes.md
           files: |
             emvparse-${{ steps.ver.outputs.version }}-${{ matrix.asset_name }}.*
