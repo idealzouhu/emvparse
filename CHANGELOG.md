@@ -8,12 +8,14 @@ For each release, use a compare link to the previous tag, e.g. `## [1.0.1](https
 
 ## [1.0.0](https://github.com/idealzouhu/emvparse/releases/tag/v1.0.0) (2026-10-29)
 
+First public release: EMV BER-TLV parsing as a CLI, embeddable library, and JSON registries.
+
 ### Added
 
-- `emvparse` CLI: `parse` (JSON / table / HTML), `tag-info`, `script` (transaction trace JSON), and `registry validate` / `merge`.
-- Auto-detect **plain BER-TLV**, **C-APDU**, and **R-APDU**; optional `--input` override.
-- JSON tag registry (EMV base plus Visa / UPI overlays) and APDU command registry; `--scheme` and `--registry` / `EMVPARSE_REGISTRY`.
-- Shared library `emvparse` with `EmvInputParser` facade for embedders; CMake `find_package(EmvParse)`.
-- Tag-specific semantics (including CVM List `8E` parsing) for table / HTML output.
-- GitHub Actions **Release** workflow: on `v*` tags, build Windows x64 and Linux x64 install trees and publish zip / tar.gz assets.
-- Bilingual README and docs under `docs/en` and `docs/zh`.
+- **CLI** — `parse` (JSON, table, HTML), `tag-info`, transaction-trace `script`, and `registry validate` / `merge`.
+- **Input handling** — Auto-detect plain BER-TLV, C-APDU, and R-APDU; override with `--input`.
+- **Registries** — Tag registry (EMV base with Visa / UPI overlays) and APDU command registry; `--scheme`, `--registry`, and `EMVPARSE_REGISTRY`.
+- **Library** — Shared `emvparse` with `EmvInputParser`; CMake `find_package(EmvParse)`.
+- **Output semantics** — Tag-aware table and HTML (e.g. CVM List `8E`); nested constructed TLV.
+- **Release CI** — On `v*` tags, build Windows x64 and Linux x64 install trees; publish zip and tar.gz assets.
+- **Docs** — English and Chinese README and guides under `docs/en` and `docs/zh`.
