@@ -1486,7 +1486,7 @@
     },
     {
       "tag": "9F0D",
-      "name": "Issuer Action Code – Default",
+      "name": "Issuer Action Code - Default",
       "description": "Specifies the issuer's conditions that cause a transaction to be rejected if it might have been approved online, but the terminal is unable to process the transaction online",
       "type": "BITFIELD",
       "format": "b",
@@ -1501,7 +1501,7 @@
     },
     {
       "tag": "9F0E",
-      "name": "Issuer Action Code – Denial",
+      "name": "Issuer Action Code - Denial",
       "description": "Specifies the issuer's conditions that cause the denial of a transaction without attempt to go online",
       "type": "BITFIELD",
       "format": "b",
@@ -1516,7 +1516,7 @@
     },
     {
       "tag": "9F0F",
-      "name": "Issuer Action Code – Online",
+      "name": "Issuer Action Code - Online",
       "description": "Specifies the issuer's conditions that cause a transaction to be transmitted online",
       "type": "BITFIELD",
       "format": "b",

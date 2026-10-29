@@ -1,5 +1,6 @@
 #include "value_semantic_parser.h"
 #include "tag_registry.h"
+#include "emvparse/dol_parser.h"
 #include <emvparse/tlv.h>
 #include <nlohmann/json.hpp>
 #include <sstream>
@@ -46,6 +47,24 @@ nlohmann::ordered_json ValueSemanticParser::parseValueSemantic(
     }
     else if (tagInfo->type == "ENUM") {
         result = parseEnumValue(tlv, tagInfo);
+    }
+    else if (tagInfo->type == "LIST") {
+        // EMV DOL: repeated Tag+Length pairs only (no values); not BER-TLV payload.
+        const auto dol = parseEmvDolList(value);
+        nlohmann::ordered_json entries = nlohmann::ordered_json::array();
+        for (const auto& entry : dol.entries) {
+            nlohmann::ordered_json item;
+            item["tag"] = entry.tagHex;
+            item["length"] = static_cast<int>(entry.length);
+            if (!entry.name.empty()) {
+                item["name"] = entry.name;
+            }
+            entries.push_back(item);
+        }
+        result["dolEntries"] = entries;
+        if (!dol.error.empty()) {
+            result["dolParseError"] = dol.error;
+        }
     }
     else if (tagInfo->type == "BINARY" || tagInfo->type == "b" || tagInfo->type.empty()) {
         // Binary or unknown type: raw hex only.

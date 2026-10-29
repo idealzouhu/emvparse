@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emvparse.local/registry/transaction-script.schema.json",
+  "title": "EMV transaction script (C-APDU / R-APDU steps)",
+  "description": "Ordered capture of a contact or contactless EMV exchange for emvparse script command",
+  "type": "object",
+  "required": ["version", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editors (not read at runtime)"
+    },
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Script format version"
+    },
+    "title": {
+      "type": "string",
+      "description": "Optional human note; not used for parsing"
+    },
+    "scheme": {
+      "type": "string",
+      "description": "Registry scheme override (EMV, Visa, UPI)"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/TransactionStep" }
+    }
+  },
+  "$defs": {
+    "ApduHex": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f\\s]+$",
+      "minLength": 2,
+      "description": "APDU bytes as contiguous hex (spaces optional, no 0x prefix)"
+    },
+    "TransactionStep": {
+      "type": "object",
+      "required": ["capdu", "rapdu"],
+      "additionalProperties": false,
+      "properties": {
+        "capdu": { "$ref": "#/$defs/ApduHex" },
+        "rapdu": { "$ref": "#/$defs/ApduHex" }
+      }
+    }
+  }
+}

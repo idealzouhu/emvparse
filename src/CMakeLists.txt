@@ -21,6 +21,9 @@ add_library(EmvParse SHARED
     tlv_formatter_table_html.cpp
     tlv_semantic_summary.cpp
     value_semantic_parser.cpp
+    dol_parser.cpp
+    transaction_script_parser.cpp
+    transaction_script_formatter.cpp
     logger.cpp
 )
 

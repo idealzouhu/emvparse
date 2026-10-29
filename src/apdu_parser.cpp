@@ -1,6 +1,8 @@
 #include "emvparse/apdu_parser.h"
+#include "emvparse/dol_parser.h"
 #include "tag_registry.h"
 #include "tlv_formatter.h"
+#include "value_semantic_parser.h"
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <iomanip>
@@ -25,6 +27,74 @@ bool isCapduCandidate(
         return false;
     }
     return registry->findCommand(fields.cla, fields.ins) != nullptr;
+}
+
+std::vector<uint8_t> tagBytesFromHex(const std::string& tagHex) {
+    std::vector<uint8_t> tag;
+    for (size_t i = 0; i + 1 < tagHex.size(); i += 2) {
+        tag.push_back(static_cast<uint8_t>(std::stoul(tagHex.substr(i, 2), nullptr, 16)));
+    }
+    return tag;
+}
+
+std::shared_ptr<TLV> makeLogicalTlv(const std::string& tagHex, const std::vector<uint8_t>& value) {
+    return std::make_shared<TLV>(tagBytesFromHex(tagHex), value);
+}
+
+/*
+ * EMV Response Message Template Format 1 uses primitive tag 80; its value is a
+ * command-specific field concatenation, not nested BER-TLV on the wire.
+ */
+std::vector<std::shared_ptr<TLV>> expandFormat1Template(
+    const std::vector<std::shared_ptr<TLV>>& tlvRoots,
+    const RapduParseContext* context
+) {
+    std::vector<std::shared_ptr<TLV>> expanded;
+    if (!context || !context->requestCommand || !context->requestCapdu) {
+        return expanded;
+    }
+    if (tlvRoots.size() != 1u) {
+        return expanded;
+    }
+    const auto& root = tlvRoots[0];
+    if (root->tagHex() != "80") {
+        return expanded;
+    }
+    const auto& value = root->getValue();
+    const uint8_t ins = context->requestCapdu->ins;
+
+    if (ins == 0xA8) {
+        // GPO Format 1: AIP[2] || AFL[n]
+        if (value.size() < 2) {
+            return expanded;
+        }
+        expanded.push_back(makeLogicalTlv("82", std::vector<uint8_t>(value.begin(), value.begin() + 2)));
+        if (value.size() > 2) {
+            expanded.push_back(
+                makeLogicalTlv("94", std::vector<uint8_t>(value.begin() + 2, value.end())));
+        }
+        return expanded;
+    }
+    if (ins == 0xAE) {
+        // GENERATE AC Format 1: CID[1] ATC[2] AC[8] IAD[n]
+        if (value.size() < 11) {
+            return expanded;
+        }
+        expanded.push_back(makeLogicalTlv("9F27", std::vector<uint8_t>(value.begin(), value.begin() + 1)));
+        expanded.push_back(makeLogicalTlv("9F36", std::vector<uint8_t>(value.begin() + 1, value.begin() + 3)));
+        expanded.push_back(makeLogicalTlv("9F26", std::vector<uint8_t>(value.begin() + 3, value.begin() + 11)));
+        if (value.size() > 11) {
+            expanded.push_back(
+                makeLogicalTlv("9F10", std::vector<uint8_t>(value.begin() + 11, value.end())));
+        }
+        return expanded;
+    }
+    if (ins == 0x88) {
+        // INTERNAL AUTHENTICATE Format 1: single cryptographic block
+        expanded.push_back(makeLogicalTlv("9F4B", value));
+        return expanded;
+    }
+    return expanded;
 }
 
 bool isRapduCandidate(
@@ -160,7 +230,8 @@ ApduParseResult ApduParser::parseCapdu(
 ApduParseResult ApduParser::parseRapdu(
     const std::vector<uint8_t>& data,
     ApduRegistry* registry,
-    const std::function<std::vector<std::shared_ptr<TLV>>(const std::vector<uint8_t>&)>& parseTlv
+    const std::function<std::vector<std::shared_ptr<TLV>>(const std::vector<uint8_t>&)>& parseTlv,
+    const RapduParseContext* context
 ) {
     ApduParseResult result;
     result.kind = ParsedInputKind::Rapdu;
@@ -198,7 +269,68 @@ ApduParseResult ApduParser::parseRapdu(
         result.statusMeaning = "unknown";
     }
 
+    // With paired C-APDU context only: expand Format 1 template 80 into logical fields.
+    if (context) {
+        result.format1Children = expandFormat1Template(result.tlvRoots, context);
+        result.format1Expanded = !result.format1Children.empty();
+    }
+
     return result;
+}
+
+void ApduParser::expandCapduDolData(
+    ApduParseResult& capduResult,
+    TagRegistry* tagRegistry,
+    const std::vector<EmvDolEntry>& pdol,
+    const std::vector<EmvDolEntry>& cdol1,
+    const std::vector<EmvDolEntry>& cdol2,
+    const std::vector<EmvDolEntry>& ddol
+) {
+    if (!capduResult.command || capduResult.capdu.commandData.empty()) {
+        return;
+    }
+    const uint8_t ins = capduResult.capdu.ins;
+    std::vector<uint8_t> payload;
+    const std::vector<EmvDolEntry>* dol = nullptr;
+
+    if (ins == 0xA8) {
+        if (!pdol.empty()) {
+            dol = &pdol;
+            if (!capduResult.tlvRoots.empty() && capduResult.tlvRoots[0]->tagHex() == "83") {
+                payload = capduResult.tlvRoots[0]->getValue();
+            } else {
+                payload = capduResult.capdu.commandData;
+            }
+        }
+    } else if (ins == 0xAE) {
+        const uint8_t p1 = capduResult.capdu.p1;
+        if ((p1 & 0xC0) == 0x40 && !cdol2.empty()) {
+            dol = &cdol2;
+        } else if (!cdol1.empty()) {
+            dol = &cdol1;
+        }
+        if (dol) {
+            if (!capduResult.tlvRoots.empty()) {
+                payload = capduResult.capdu.commandData;
+            } else {
+                payload = capduResult.capdu.commandData;
+            }
+        }
+    } else if (ins == 0x88 && !ddol.empty()) {
+        dol = &ddol;
+        payload = capduResult.capdu.commandData;
+    }
+
+    if (!dol || dol->empty() || payload.empty()) {
+        return;
+    }
+    auto split = splitDolPayload(*dol, payload);
+    for (auto& entry : split.entries) {
+        std::vector<EmvDolEntry> one = {entry.dolEntry};
+        enrichDolEntryNames(one, tagRegistry);
+        entry.dolEntry = one[0];
+    }
+    capduResult.dolDataValues = split.entries;
 }
 
 std::string ApduParser::resolveParamMeaning(const ApduParamRule& rule, uint8_t value, int* sfiOut) {
@@ -308,6 +440,23 @@ std::string ApduParser::formatJson(const ApduParseResult& result, TagRegistry* t
         } else if (!result.capdu.dataHex.empty()) {
             dataBlock["hex"] = result.capdu.dataHex;
         }
+        if (!result.dolDataValues.empty()) {
+            nlohmann::ordered_json dolArray = nlohmann::ordered_json::array();
+            for (const auto& entry : result.dolDataValues) {
+                nlohmann::ordered_json item;
+                item["tag"] = entry.dolEntry.tagHex;
+                item["length"] = static_cast<int>(entry.dolEntry.length);
+                if (!entry.dolEntry.name.empty()) {
+                    item["name"] = entry.dolEntry.name;
+                }
+                item["value"] = entry.valueHex;
+                if (entry.missing) {
+                    item["missing"] = true;
+                }
+                dolArray.push_back(item);
+            }
+            dataBlock["dolValues"] = dolArray;
+        }
         root["data"] = dataBlock;
 
         nlohmann::ordered_json raw;
@@ -332,6 +481,15 @@ std::string ApduParser::formatJson(const ApduParseResult& result, TagRegistry* t
         tlvArray.push_back(TLVFormatter::toJson(tlv, tagRegistry));
     }
     body["tlv"] = tlvArray;
+    if (result.format1Expanded && !result.format1Children.empty()) {
+        nlohmann::ordered_json f1 = nlohmann::ordered_json::array();
+        for (const auto& tlv : result.format1Children) {
+            f1.push_back(TLVFormatter::toJson(tlv, tagRegistry));
+        }
+        body["format1"] = f1;
+        body["format1Note"] =
+            "On-wire body is primitive tag 80 (Format 1); fields below have no on-wire tags.";
+    }
     root["body"] = body;
     return root.dump(2);
 }
@@ -375,16 +533,52 @@ void appendCapduFieldLine(
     out << "\n";
 }
 
+void appendCapduFieldLineAligned(
+    std::ostringstream& out,
+    const char* label,
+    const std::string& hexValue,
+    const std::string& meaning
+) {
+    out << std::left << std::setw(3) << label << " : " << std::left << std::setw(4) << hexValue;
+    if (!meaning.empty()) {
+        out << "  " << meaning;
+    }
+    out << "\n";
+}
+
+std::string formatCapduScriptFieldsBlock(const ApduParseResult& result) {
+    std::ostringstream out;
+    appendCapduFieldLineAligned(out, "CLA", upperHexByte(result.capdu.cla), "");
+    {
+        const std::string insMeaning = result.command ? result.command->name : "";
+        appendCapduFieldLineAligned(out, "INS", upperHexByte(result.capdu.ins), insMeaning);
+    }
+    appendCapduFieldLineAligned(out, "P1", upperHexByte(result.capdu.p1), result.p1Meaning);
+    appendCapduFieldLineAligned(out, "P2", upperHexByte(result.capdu.p2), result.p2Meaning);
+    if (result.capdu.hasLc) {
+        const std::string lcDec = std::to_string(static_cast<int>(result.capdu.lc)) + " bytes";
+        appendCapduFieldLineAligned(out, "Lc", upperHexByte(result.capdu.lc), lcDec);
+    }
+    if (result.capdu.hasLe) {
+        appendCapduFieldLineAligned(out, "Le", upperHexByte(result.capdu.le), "");
+    }
+    return out.str();
+}
+
 std::string formatCapduBlock(const ApduParseResult& result) {
     const std::string commandName = result.command ? result.command->name : "Unknown";
     std::ostringstream out;
     out << commandName << " (" << spacedCapduHex(result.capdu) << ")\n";
     appendCapduFieldLine(out, "CLA", upperHexByte(result.capdu.cla), "");
-    appendCapduFieldLine(out, "INS", upperHexByte(result.capdu.ins), "");
+    {
+        std::string insMeaning = result.command ? result.command->name : "";
+        appendCapduFieldLine(out, "INS", upperHexByte(result.capdu.ins), insMeaning);
+    }
     appendCapduFieldLine(out, "P1", upperHexByte(result.capdu.p1), result.p1Meaning);
     appendCapduFieldLine(out, "P2", upperHexByte(result.capdu.p2), result.p2Meaning);
     if (result.capdu.hasLc) {
-        appendCapduFieldLine(out, "Lc", upperHexByte(result.capdu.lc), "");
+        const std::string lcDec = std::to_string(static_cast<int>(result.capdu.lc)) + " bytes";
+        appendCapduFieldLine(out, "Lc", upperHexByte(result.capdu.lc), lcDec);
     }
     if (result.capdu.hasLe) {
         appendCapduFieldLine(out, "Le", upperHexByte(result.capdu.le), "");
@@ -455,11 +649,19 @@ std::string formatCapduHtmlBlock(const ApduParseResult& result) {
         << htmlEscape(spacedCapduHex(result.capdu)) << ")</span></h2>\n"
         << "<table class=\"capdu-fields\">\n";
     appendCapduHtmlFieldRow(out, "CLA", upperHexByte(result.capdu.cla), "");
-    appendCapduHtmlFieldRow(out, "INS", upperHexByte(result.capdu.ins), "");
+    appendCapduHtmlFieldRow(
+        out,
+        "INS",
+        upperHexByte(result.capdu.ins),
+        result.command ? result.command->name : "");
     appendCapduHtmlFieldRow(out, "P1", upperHexByte(result.capdu.p1), result.p1Meaning);
     appendCapduHtmlFieldRow(out, "P2", upperHexByte(result.capdu.p2), result.p2Meaning);
     if (result.capdu.hasLc) {
-        appendCapduHtmlFieldRow(out, "Lc", upperHexByte(result.capdu.lc), "");
+        appendCapduHtmlFieldRow(
+            out,
+            "Lc",
+            upperHexByte(result.capdu.lc),
+            std::to_string(static_cast<int>(result.capdu.lc)) + " bytes");
     }
     if (result.capdu.hasLe) {
         appendCapduHtmlFieldRow(out, "Le", upperHexByte(result.capdu.le), "");
@@ -503,7 +705,7 @@ std::vector<TableTextRow> rapduTableRows(const ApduParseResult& result) {
     swRow.name = "Status word";
     swRow.length = "2";
     swRow.value = upperHexByte(static_cast<uint8_t>((result.statusWord >> 8) & 0xFF)) + " " +
-                  upperHexByte(static_cast<uint8_t>(result.statusWord & 0xFF)) + " — " +
+                  upperHexByte(static_cast<uint8_t>(result.statusWord & 0xFF)) + " - " +
                   result.statusMeaning;
     rows.push_back(swRow);
 
@@ -511,6 +713,22 @@ std::vector<TableTextRow> rapduTableRows(const ApduParseResult& result) {
 }
 
 } // namespace
+
+std::string ApduParser::bytesToHexUpper(const std::vector<uint8_t>& data) {
+    return bytesHex(data);
+}
+
+std::string ApduParser::formatCapduSendBlock(const ApduParseResult& result) {
+    return formatCapduBlock(result);
+}
+
+std::string ApduParser::formatCapduScriptFields(const ApduParseResult& result) {
+    return formatCapduScriptFieldsBlock(result);
+}
+
+std::string ApduParser::formatCapduHtmlSendBlock(const ApduParseResult& result) {
+    return formatCapduHtmlBlock(result);
+}
 
 std::string ApduParser::formatTable(
     const ApduParseResult& result,
@@ -531,7 +749,10 @@ std::string ApduParser::formatTable(
     }
 
     std::vector<TableTextRow> rows = rapduTableRows(result);
-    auto tlvRows = TLVFormatter::tableRowsFromRoots(result.tlvRoots, tagRegistry, options);
+    const auto& tlvSource =
+        result.format1Expanded && !result.format1Children.empty() ? result.format1Children
+                                                                  : result.tlvRoots;
+    auto tlvRows = TLVFormatter::tableRowsFromRoots(tlvSource, tagRegistry, options);
     rows.insert(rows.end(), tlvRows.begin(), tlvRows.end());
     return TLVFormatter::renderTextTable(rows);
 }
@@ -551,7 +772,7 @@ std::string ApduParser::formatHtml(const ApduParseResult& result, TagRegistry* t
     if (result.kind == ParsedInputKind::Rapdu) {
         prefix << "<div class=\"apdu-summary\"><strong>Status</strong> "
                << byteHex(static_cast<uint8_t>((result.statusWord >> 8) & 0xFF))
-               << byteHex(static_cast<uint8_t>(result.statusWord & 0xFF)) << " — "
+               << byteHex(static_cast<uint8_t>(result.statusWord & 0xFF)) << " - "
                << htmlEscape(result.statusMeaning) << "</div>\n";
     }
 

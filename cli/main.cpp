@@ -1,6 +1,7 @@
 #include "cli_options.h"
 #include "commands_parse.h"
 #include "commands_registry.h"
+#include "commands_script.h"
 #include <cstring>
 #include <iostream>
 
@@ -17,6 +18,7 @@ static void printHelp() {
         << "\n"
         << "Commands:\n"
         << "  parse       Parse hex TLV (json/table to stdout; html to a file)\n"
+        << "  script      Parse a transaction script JSON (ordered C-APDU / R-APDU steps)\n"
         << "  tag-info    Print registry metadata for one tag (JSON)\n"
         << "  registry    Validate or merge registry JSON (see subcommands below)\n"
         << "\n"
@@ -34,6 +36,7 @@ static void printHelp() {
         << "  emvparse parse 770E8202198094081001020120010300 --format table\n"
         << "  emvparse parse 770E8202198094081001020120010300 --format html\n"
         << "  emvparse parse --file capture.hex --registry ./registry\n"
+        << "  emvparse script --file txn.json --format table\n"
         << "  emvparse tag-info 9F33\n"
         << "  emvparse registry validate\n"
         << "  emvparse registry merge --scheme EMV --output merged.json\n"
@@ -43,6 +46,7 @@ static void printHelp() {
         << "\n"
         << "Command help:\n"
         << "  emvparse parse --help\n"
+        << "  emvparse script --help\n"
         << "  emvparse tag-info --help\n"
         << "  emvparse registry --help\n";
 }
@@ -65,6 +69,9 @@ int main(int argc, char* argv[]) {
 
     if (std::strcmp(argv[1], "parse") == 0) {
         return runParseCommand(argc, argv);
+    }
+    if (std::strcmp(argv[1], "script") == 0) {
+        return runScriptCommand(argc, argv);
     }
     if (std::strcmp(argv[1], "tag-info") == 0) {
         return runTagInfoCommand(argc, argv);

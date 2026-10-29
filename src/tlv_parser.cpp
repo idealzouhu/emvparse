@@ -213,6 +213,30 @@ std::string TLVParser::getTagInfo(const std::string& tagHex) const {
     return info.dump(2);
 }
 
+bool TLVParser::readTlvLength(const std::vector<uint8_t>& data, size_t& offset, size_t& lengthOut) {
+    if (offset >= data.size()) {
+        return false;
+    }
+    const uint8_t first = data[offset++];
+    if (first <= 0x7F) {
+        lengthOut = static_cast<size_t>(first);
+        return true;
+    }
+    if (first == 0x80) {
+        return false;
+    }
+    const size_t numOctets = static_cast<size_t>(first & 0x7F);
+    if (numOctets == 0 || numOctets > 4 || offset + numOctets > data.size()) {
+        return false;
+    }
+    size_t len = 0;
+    for (size_t i = 0; i < numOctets; ++i) {
+        len = (len << 8) | static_cast<size_t>(data[offset++]);
+    }
+    lengthOut = len;
+    return true;
+}
+
 std::shared_ptr<TLV> TLVParser::parseTLV(const std::vector<uint8_t>& data, size_t& offset) {
     if (offset >= data.size()) {
         return nullptr;
@@ -226,17 +250,11 @@ std::shared_ptr<TLV> TLVParser::parseTLV(const std::vector<uint8_t>& data, size_
         return nullptr;
     }
 
-    // 2. Parse Length
-    if (offset >= data.size()) {
+    // 2. Parse Length (BER-TLV short and long form; EMV read-record templates use 81/82).
+    size_t length = 0;
+    if (!readTlvLength(data, offset, length)) {
         return nullptr;
     }
-    uint8_t lengthByte = data[offset++];
-    
-    if (lengthByte > 0x7F) {
-        return nullptr; // Long-form length not supported yet.
-    }
-    
-    size_t length = lengthByte;
 
     // 3. Parse Value
     if (offset + length > data.size()) {
@@ -316,7 +334,12 @@ bool TLVParser::isCompositeTag(const std::vector<uint8_t>& tag) {
     return (firstByte & 0x20) != 0;  // 0x20: bit 6 set => constructed.
 }
 
-std::vector<uint8_t> TLVParser::hexStringToBytes(const std::string& hexStr) {
+std::vector<uint8_t> TLVParser::hexToBytes(const std::string& hexStr) {
+    TLVParser tmp;
+    return tmp.hexStringToBytes(hexStr);
+}
+
+std::vector<uint8_t> TLVParser::hexStringToBytes(const std::string& hexStr) const {
     std::vector<uint8_t> data;
     
     // Strip whitespace ("9F33 02 01 41" or "9F33020141").

@@ -31,6 +31,9 @@ emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A03810643870
 
 # Single-tag registry lookup
 emvparse tag-info 9F33 --scheme EMV
+
+# Transaction script (ordered C-APDU / R-APDU steps)
+emvparse script --file docs/examples/transaction-script-v1.json --format table
 ```
 
 **About `--format table`:** stdout is **plain text for reading**, not a strict grid. TLV uses fixed columns (TAG / Name / Length / Value); **C-APDU** uses a labeled block (command name, CLA/INS/P1/P2/…); **R-APDU** mixes a status summary with TLV rows when present. Use **json** for scripts, **html** for a saved report.

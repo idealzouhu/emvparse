@@ -48,6 +48,12 @@ public:
         const std::vector<std::shared_ptr<TLV>>& roots,
         TagRegistry* registry
     );
+
+    static std::string toTreeText(
+        const std::vector<std::shared_ptr<TLV>>& roots,
+        TagRegistry* registry,
+        const emvparse::FormatOptions& options
+    );
 };
 
 #endif // TLVFORMATTER_H

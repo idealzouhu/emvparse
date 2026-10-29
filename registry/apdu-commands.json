@@ -19,7 +19,7 @@
       "cla": "00",
       "ins": "A4",
       "name": "SELECT",
-      "dataFormat": "ber_tlv",
+      "dataFormat": "binary",
       "p1": {
         "name": "Selection control (P1)",
         "enumMap": {

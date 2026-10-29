@@ -3,6 +3,7 @@
 
 #include "emvparse/emvparse_global.h"
 #include "emvparse/output_options.h"
+#include "emvparse/dol_parser.h"
 #include "emvparse/tlv.h"
 #include <cstdint>
 #include <functional>
@@ -64,6 +65,11 @@ struct CapduFields {
     std::string dataHex;
 };
 
+struct RapduParseContext {
+    const CapduFields* requestCapdu = nullptr;
+    const ApduCommandInfo* requestCommand = nullptr;
+};
+
 struct ApduParseResult {
     ParsedInputKind kind = ParsedInputKind::Tlv;
     const ApduCommandInfo* command = nullptr;
@@ -74,6 +80,11 @@ struct ApduParseResult {
     uint16_t statusWord = 0;
     std::string statusMeaning;
     std::vector<std::shared_ptr<TLV>> tlvRoots;
+    /** Logical fields sliced from R-APDU Format 1 template tag 80 (wire TLV unchanged). */
+    std::vector<std::shared_ptr<TLV>> format1Children;
+    /** C-APDU command data split using script DOL context (PDOL/CDOL/DDOL). */
+    std::vector<DolPayloadSplitEntry> dolDataValues;
+    bool format1Expanded = false;
 };
 
 using TlvBodyConsumer = std::function<bool(const std::vector<uint8_t>& body)>;
@@ -98,8 +109,25 @@ public:
     static ApduParseResult parseRapdu(
         const std::vector<uint8_t>& data,
         ApduRegistry* registry,
-        const std::function<std::vector<std::shared_ptr<TLV>>(const std::vector<uint8_t>&)>& parseTlv
+        const std::function<std::vector<std::shared_ptr<TLV>>(const std::vector<uint8_t>&)>& parseTlv,
+        const RapduParseContext* context = nullptr
     );
+
+    static void expandCapduDolData(
+        ApduParseResult& capduResult,
+        TagRegistry* tagRegistry,
+        const std::vector<EmvDolEntry>& pdol,
+        const std::vector<EmvDolEntry>& cdol1,
+        const std::vector<EmvDolEntry>& cdol2,
+        const std::vector<EmvDolEntry>& ddol
+    );
+
+    static std::string formatCapduSendBlock(const ApduParseResult& result);
+    /** Script table: aligned CLA/INS/P1/... lines without repeating the command title row. */
+    static std::string formatCapduScriptFields(const ApduParseResult& result);
+    static std::string formatCapduHtmlSendBlock(const ApduParseResult& result);
+
+    static std::string bytesToHexUpper(const std::vector<uint8_t>& data);
 
     static std::string formatJson(const ApduParseResult& result, TagRegistry* tagRegistry);
     static std::string formatTable(

@@ -39,6 +39,26 @@ Hex may include spaces and an optional `0x` prefix.
 
 HTML embeds full semantic detail in the page but **shows the active summary by default**; click **Details** in a value cell to expand or collapse the full bit list (gray lines for unset bits). This fold behavior does not depend on `--semantic`.
 
+### `script`
+
+Parse a **transaction script** JSON file: an ordered list of **C-APDU** / **R-APDU** pairs (hex only). The tool derives step titles, accumulates **PDOL / CDOL / DDOL** from responses, splits GPO and GENERATE AC command data when DOL is known, and expands **Format 1** R-APDU template tag `80` when each step’s response is paired with its command.
+
+```bash
+emvparse script --file txn.json --format table
+emvparse script --file txn.json --format table --semantic full
+emvparse script --file txn.json --format json
+emvparse script --file txn.json --format html -o txn.html
+```
+
+Script format (version **1**): required `version` and `steps[]` with `capdu` and `rapdu` hex strings. Optional `title` (note only) and `scheme` (overrides `--scheme`). Schema: [registry/transaction-script.schema.json](../../registry/transaction-script.schema.json). Example: [docs/examples/transaction-script-v1.json](../examples/transaction-script-v1.json).
+
+| Option | Values | Notes |
+|--------|--------|--------|
+| `--format` | `json` (default), `table`, `html` | **table** → stepwise Command / Send / Response on stdout; **html** → file (`-o`, default `<script>.html`). |
+| `--output`, `-o` | path | **HTML only.** |
+| `--semantic` | `active`, `full` | **Table only.** |
+| `--scheme`, `--registry` | | Same as `parse`. |
+
 ### `tag-info`
 
 Print registry metadata for one tag as JSON.

@@ -14,6 +14,19 @@ std::string indentSpaces(int depth) {
     return std::string(static_cast<size_t>(depth * 2), ' ');
 }
 
+std::string treeValueLengthHex(std::size_t length) {
+    std::ostringstream oss;
+    oss << std::uppercase << std::hex << std::setfill('0');
+    if (length <= 0xFF) {
+        oss << std::setw(2) << length;
+    } else if (length <= 0xFFFF) {
+        oss << std::setw(4) << length;
+    } else {
+        oss << length;
+    }
+    return oss.str();
+}
+
 std::string spacedHexUpper(const std::string& hex) {
     std::string out;
     for (size_t i = 0; i < hex.size(); i += 2) {
@@ -68,7 +81,48 @@ nlohmann::ordered_json semanticForTlv(
         semantic["raw"] = tlv->valueHex();
         return semantic;
     }
-    return ValueSemanticParser::parseValueSemantic(tlv, tagInfo);
+    auto semantic = ValueSemanticParser::parseValueSemantic(tlv, tagInfo);
+    if (registry && tagInfo->type == "LIST" && semantic.contains("dolEntries") &&
+        semantic["dolEntries"].is_array()) {
+        for (auto& entry : semantic["dolEntries"]) {
+            if (!entry.is_object() || !entry.contains("tag")) {
+                continue;
+            }
+            const std::string tag = entry["tag"].get<std::string>();
+            if (auto info = registry->getTagInfo(tag)) {
+                entry["name"] = info->name;
+            }
+        }
+    }
+    return semantic;
+}
+
+void appendTreeLines(
+    const std::shared_ptr<TLV>& tlv,
+    TagRegistry* registry,
+    int depth,
+    const emvparse::FormatOptions& options,
+    std::ostringstream& out
+) {
+    const std::string tagHex = tlv->tagHex();
+    std::shared_ptr<TagInfo> tagInfo = registry ? registry->getTagInfo(tagHex) : nullptr;
+    const bool composite = !tlv->getChildren().empty();
+    const std::string name = tagInfo ? tagInfo->name : "";
+    out << indentSpaces(depth) << tagHex << " " << treeValueLengthHex(tlv->getValue().size());
+    if (!name.empty()) {
+        out << " -> " << name;
+    }
+    out << "\n";
+    if (!composite && tagInfo) {
+        const auto semantic = semanticForTlv(tlv, registry, tagInfo);
+        const auto lines = buildSemanticSummaryLines(semantic, options.semantic);
+        for (const auto& line : lines) {
+            out << indentSpaces(depth + 1) << line.text << "\n";
+        }
+    }
+    for (const auto& child : tlv->getChildren()) {
+        appendTreeLines(child, registry, depth + 1, options, out);
+    }
 }
 
 void collectTableRows(
@@ -232,6 +286,18 @@ std::vector<TableTextRow> TLVFormatter::tableRowsFromRoots(
 std::string TLVFormatter::renderTextTable(const std::vector<TableTextRow>& rows) {
     std::ostringstream out;
     renderFixedWidthTable(rows, out);
+    return out.str();
+}
+
+std::string TLVFormatter::toTreeText(
+    const std::vector<std::shared_ptr<TLV>>& roots,
+    TagRegistry* registry,
+    const emvparse::FormatOptions& options
+) {
+    std::ostringstream out;
+    for (const auto& root : roots) {
+        appendTreeLines(root, registry, 0, options, out);
+    }
     return out.str();
 }
 

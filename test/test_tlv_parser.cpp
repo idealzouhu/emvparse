@@ -116,6 +116,17 @@ TEST_F(TlvParserStructureTest, EmptyValue) {
     EXPECT_EQ(tlv->valueHex(), "");
 }
 
+// Long-form BER-TLV length (e.g. READ RECORD response 70 81 B8 ...)
+TEST_F(TlvParserStructureTest, LongFormLength81) {
+    const std::vector<uint8_t> data = {0x70, 0x81, 0x04, 0x95, 0x02, 0x01, 0x01, 0x00};
+    auto tlvList = parser->parseBytes(data);
+    ASSERT_EQ(tlvList.size(), 1u);
+    EXPECT_EQ(tlvList[0]->tagHex(), "70");
+    EXPECT_EQ(tlvList[0]->getValue().size(), 4u);
+    ASSERT_EQ(tlvList[0]->getChildren().size(), 1u);
+    EXPECT_EQ(tlvList[0]->getChildren()[0]->tagHex(), "95");
+}
+
 // 测试5: 长 Value 解析
 TEST_F(TlvParserStructureTest, LongValue) {
     // 测试数据: Tag=0x95, Length=0x05, Value=0x01 0x02 0x03 0x04 0x05

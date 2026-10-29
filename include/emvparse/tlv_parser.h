@@ -42,6 +42,11 @@ public:
 
     std::string getTagInfo(const std::string& tagHex) const;
 
+    TagRegistry* tagRegistry() const { return registry_; }
+    ApduRegistry* apduRegistry() const { return apduRegistry_; }
+
+    static std::vector<uint8_t> hexToBytes(const std::string& hexStr);
+
     void setLogCallback(LogCallback callback);
 
 private:
@@ -54,7 +59,9 @@ private:
 
     bool isCompositeTag(const std::vector<uint8_t>& tag);
 
-    std::vector<uint8_t> hexStringToBytes(const std::string& hexStr);
+    static bool readTlvLength(const std::vector<uint8_t>& data, size_t& offset, size_t& lengthOut);
+
+    std::vector<uint8_t> hexStringToBytes(const std::string& hexStr) const;
 };
 
 #endif // EMVPARSE_TLV_PARSER_H

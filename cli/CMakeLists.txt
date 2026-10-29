@@ -4,6 +4,7 @@ add_executable(emvparse_cli
     hex_util.cpp
     commands_parse.cpp
     commands_registry.cpp
+    commands_script.cpp
 )
 
 set_target_properties(emvparse_cli PROPERTIES OUTPUT_NAME emvparse)

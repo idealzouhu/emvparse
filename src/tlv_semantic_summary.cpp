@@ -88,6 +88,24 @@ std::vector<SemanticSummaryLine> buildSemanticSummaryLines(
         lines.push_back({line, false});
     }
 
+    if (semantic.contains("dolEntries") && semantic["dolEntries"].is_array()) {
+        for (const auto& entry : semantic["dolEntries"]) {
+            if (!entry.is_object()) {
+                continue;
+            }
+            std::string line = entry.value("tag", std::string());
+            if (entry.contains("length")) {
+                line += " " + std::to_string(entry["length"].get<int>());
+            }
+            if (entry.contains("name") && entry["name"].is_string()) {
+                line += "  " + entry["name"].get<std::string>();
+            }
+            if (!line.empty()) {
+                lines.push_back({line, false});
+            }
+        }
+    }
+
     if (semantic.contains("entries") && semantic["entries"].is_array()) {
         for (const auto& entry : semantic["entries"]) {
             if (!entry.is_object()) {

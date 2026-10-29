@@ -31,6 +31,9 @@ emvparse parse 6F29840E325041592E5359532E4444463031A517BF0C1461129F2A03810643870
 
 # 单 Tag 注册表查询
 emvparse tag-info 9F33 --scheme EMV
+
+# 交易脚本（有序 C-APDU / R-APDU 步骤）
+emvparse script --file docs/examples/transaction-script-v1.json --format table
 ```
 
 **关于 `--format table`：** 输出是便于阅读的**纯文本**，不一定是统一网格。TLV 为 TAG/Name/Length/Value 列；**C-APDU** 为命令名 + CLA/INS/P1/P2/… 字段块；**R-APDU** 为状态字摘要 + 下方 TLV 行。脚本用 **json**，存档用 **html**。
