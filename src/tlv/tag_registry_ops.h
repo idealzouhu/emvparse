@@ -1,7 +1,7 @@
 #ifndef EMVPARSE_TAG_REGISTRY_OPS_H
 #define EMVPARSE_TAG_REGISTRY_OPS_H
 
-#include "emvparse_global.h"
+#include "emvparse/emvparse_global.h"
 #include <cstddef>
 #include <string>
 #include <vector>

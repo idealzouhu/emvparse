@@ -28,10 +28,17 @@ struct TagInfo {
     std::string template_;
     std::vector<BitFieldRule> bitFields;
     std::map<std::string, std::string> enumMap;
+    /** Optional shared lookup table id (e.g. iso3166, iso4217) from registry/iso-lookups.json */
+    std::string enumRef;
 };
+
+class Logger;
 
 class TagRegistry {
 public:
+    void setLogger(Logger* logger);
+
+    /** Loads manifest base JSON then scheme overlay chain; later files override tag keys. */
     bool loadManifest(const std::string& manifestPath, const std::string& scheme);
 
     std::shared_ptr<TagInfo> getTagInfo(const std::string& tagHex) const;
@@ -41,6 +48,10 @@ public:
     std::vector<std::shared_ptr<TagInfo>> allTags() const;
 
 private:
+    Logger* logger_ = nullptr;
+
+    Logger& logSink() const;
+
     struct MergeLayer {
         std::string filePath;
         std::string schemeLabel;

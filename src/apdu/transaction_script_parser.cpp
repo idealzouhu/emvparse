@@ -1,5 +1,7 @@
-#include "emvparse/transaction_script.h"
-#include "emvparse/tlv_parser.h"
+#include "transaction_script.h"
+#include "emv_parse_context.h"
+#include "hex_util.h"
+#include "tlv_parser.h"
 #include "tag_registry.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -8,6 +10,7 @@
 
 namespace {
 
+// Collect DOL definitions from FCI/GPO/etc. so later GET PROCESSING OPTIONS / GENERATE AC data can split.
 void walkTlvUpdateDol(
     const std::shared_ptr<TLV>& tlv,
     ScriptDolContext& ctx,
@@ -167,24 +170,29 @@ std::string TransactionScriptParser::deriveStepTitle(const ApduParseResult& capd
     return name;
 }
 
-TransactionScriptParseResult TransactionScriptParser::parse(TLVParser& parser, const TransactionScript& script) {
+TransactionScriptParseResult TransactionScriptParser::parse(
+    EmvParseContext& context,
+    const TransactionScript& script
+) {
     TransactionScriptParseResult result;
     result.script = script;
 
-    TagRegistry* tagRegistry = parser.tagRegistry();
-    ApduRegistry* apduRegistry = parser.apduRegistry();
-    const auto tlvParseFn = [&parser](const std::vector<uint8_t>& payload) {
-        return parser.parseBytes(payload);
+    TagRegistry* tagRegistry = context.tagRegistry();
+    ApduRegistry* apduRegistry = &context.apduRegistry;
+    TLVParser& tlvParser = context.tlvParser;
+    const auto tlvParseFn = [&tlvParser](const std::vector<uint8_t>& payload) {
+        return tlvParser.parseBytes(payload);
     };
 
     ScriptDolContext dolCtx;
     int stepIndex = 0;
     for (const auto& stepInput : script.steps) {
+        // dolCtx grows after each step via absorbTlvTree on C-APDU and R-APDU TLV roots.
         TransactionScriptStepResult step;
         step.index = stepIndex++;
 
-        const auto capduBytes = TLVParser::hexToBytes(stepInput.capduHex);
-        const auto rapduBytes = TLVParser::hexToBytes(stepInput.rapduHex);
+        const auto capduBytes = parseHexString(stepInput.capduHex);
+        const auto rapduBytes = parseHexString(stepInput.rapduHex);
         if (capduBytes.empty() && !stepInput.capduHex.empty()) {
             result.error = "invalid capdu hex at step " + std::to_string(step.index);
             return result;

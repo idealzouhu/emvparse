@@ -48,7 +48,7 @@ target_link_libraries(my_app PRIVATE EmvParse::EmvParse)
 ```
 
 ```cpp
-#include <emvparse/tlv_parser.h>
+#include <emvparse/input_parser.h>
 ```
 
 Five-minute examples: [Library integration](docs/en/library-integration.md).

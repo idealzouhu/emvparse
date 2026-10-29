@@ -143,6 +143,7 @@
       "type": "NUMERIC",
       "format": "n",
       "length": "2",
+      "enumRef": "iso3166",
       "source": "ICC",
       "kernel": "EMV",
       "template": "70 or 77",
@@ -158,6 +159,7 @@
       "type": "NUMERIC",
       "format": "n",
       "length": "2",
+      "enumRef": "iso4217",
       "source": "Terminal",
       "kernel": "EMV",
       "scheme": "EMV"
@@ -1305,11 +1307,21 @@
       "tag": "9C",
       "name": "Transaction Type",
       "description": "Indicates the type of financial transaction, represented by the first two digits of the ISO 8583:1987 Processing Code. The actual values to be used for the Transaction Type data element are defined by the relevant payment system",
-      "type": "NUMERIC",
+      "type": "ENUM",
       "format": "n",
       "length": "1",
       "source": "Terminal",
       "kernel": "EMV",
+      "enumMap": {
+        "00": "Purchase (Goods and Services)",
+        "01": "Cash",
+        "02": "Adjustment",
+        "03": "Check Guarantee or Check Verification",
+        "04": "Check Deposit",
+        "09": "Purchase with Cashback",
+        "20": "Refund (Credit)",
+        "21": "Deposit"
+      },
       "scheme": "EMV"
     },
     {
@@ -1687,6 +1699,7 @@
       "type": "NUMERIC",
       "format": "n",
       "length": "2",
+      "enumRef": "iso3166",
       "source": "Terminal",
       "kernel": "EMV",
       "scheme": "EMV"
@@ -1991,7 +2004,7 @@
       "name": "Application Transaction Counter (ATC)",
       "description": "Counter maintained by the application in the ICC (incrementing the ATC is managed by the ICC)",
       "type": "NUMERIC",
-      "format": "n",
+      "format": "b",
       "length": "2",
       "source": "ICC",
       "kernel": "EMV",
@@ -2080,6 +2093,7 @@
       "type": "NUMERIC",
       "format": "n",
       "length": "2",
+      "enumRef": "iso4217",
       "source": "Terminal",
       "kernel": "EMV",
       "scheme": "EMV"
@@ -2174,6 +2188,7 @@
       "type": "NUMERIC",
       "format": "n",
       "length": "2",
+      "enumRef": "iso4217",
       "source": "ICC",
       "kernel": "EMV",
       "template": "70 or 77",

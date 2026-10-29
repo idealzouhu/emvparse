@@ -1,7 +1,8 @@
 #include "tag_registry.h"
+#include "registry_io.h"
+#include "iso_numeric_lookup.h"
 #include "logger.h"
 #include <nlohmann/json.hpp>
-#include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <cctype>
@@ -9,25 +10,6 @@
 using json = nlohmann::json;
 
 namespace {
-
-std::string registryDirname(const std::string& path) {
-    const size_t pos = path.find_last_of("/\\");
-    if (pos == std::string::npos) {
-        return ".";
-    }
-    return path.substr(0, pos);
-}
-
-std::string joinRegistryPath(const std::string& dir, const std::string& file) {
-    if (dir.empty() || dir == ".") {
-        return file;
-    }
-    const char last = dir.back();
-    if (last == '/' || last == '\\') {
-        return dir + file;
-    }
-    return dir + "/" + file;
-}
 
 std::string normalizeTagHex(std::string tag) {
     std::string out;
@@ -70,46 +52,6 @@ void normalizeBitFieldRule(BitFieldRule& rule) {
     }
 }
 
-bool readJsonFile(const std::string& filePath, json& out) {
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file.is_open()) {
-        Logger::error("Failed to open file: " + filePath);
-        return false;
-    }
-
-    file.seekg(0, std::ios::end);
-    const size_t fileSize = static_cast<size_t>(file.tellg());
-    if (fileSize == 0) {
-        Logger::error("File is empty: " + filePath);
-        return false;
-    }
-    file.seekg(0, std::ios::beg);
-
-    std::string content;
-    content.resize(fileSize);
-    file.read(&content[0], static_cast<std::streamsize>(fileSize));
-    file.close();
-
-    if (fileSize >= 3 &&
-        static_cast<unsigned char>(content[0]) == 0xEF &&
-        static_cast<unsigned char>(content[1]) == 0xBB &&
-        static_cast<unsigned char>(content[2]) == 0xBF) {
-        content = content.substr(3);
-    }
-
-    try {
-        out = json::parse(content);
-    } catch (const json::parse_error& e) {
-        Logger::error("JSON parse error in file: " + filePath);
-        const char* whatMsg = e.what();
-        if (whatMsg && *whatMsg != '\0') {
-            Logger::error(std::string(whatMsg));
-        }
-        return false;
-    }
-    return true;
-}
-
 void applyStringField(json const& obj, const char* key, std::string& dest) {
     if (obj.contains(key) && obj[key].is_string()) {
         dest = obj[key].get<std::string>();
@@ -144,13 +86,14 @@ std::shared_ptr<TagInfo> buildTagInfoFromObject(const json& tagJson) {
         info->type = normalizeTagType(tagJson["type"].get<std::string>());
     }
 
-    if (info->type == "ENUM" && tagJson.contains("enumMap") && tagJson["enumMap"].is_object()) {
+    if (tagJson.contains("enumMap") && tagJson["enumMap"].is_object()) {
         for (auto it = tagJson["enumMap"].begin(); it != tagJson["enumMap"].end(); ++it) {
             if (it.value().is_string()) {
                 info->enumMap[it.key()] = it.value().get<std::string>();
             }
         }
     }
+    applyStringField(tagJson, "enumRef", info->enumRef);
 
     if (info->type == "BITFIELD" && tagJson.contains("bitFields") && tagJson["bitFields"].is_array()) {
         for (const auto& fieldJson : tagJson["bitFields"]) {
@@ -178,12 +121,12 @@ std::shared_ptr<TagInfo> buildTagInfoFromObject(const json& tagJson) {
     return info;
 }
 
-json tagBodyForRuntime(const json& tagJson) {
+json tagBodyForRuntime(const json& tagJson, Logger& log) {
     if (tagJson.contains("variants") && tagJson["variants"].is_array() && !tagJson["variants"].empty()) {
         const auto& variants = tagJson["variants"];
         if (variants.size() > 1) {
             std::string tagHex = tagJson.contains("tag") ? tagJson["tag"].get<std::string>() : "?";
-            Logger::warning(
+            log.warning(
                 "Tag " + tagHex + " has " + std::to_string(variants.size()) +
                 " variants; runtime flat map uses the first variant only");
         }
@@ -196,20 +139,30 @@ json tagBodyForRuntime(const json& tagJson) {
 
 } // namespace
 
+void TagRegistry::setLogger(Logger* logger) {
+    logger_ = logger;
+}
+
+Logger& TagRegistry::logSink() const {
+    return logger_ ? *logger_ : Logger::defaultSink();
+}
+
 bool TagRegistry::loadManifest(const std::string& manifestPath, const std::string& scheme) {
+    // Merge order: base file, then each overlay path listed under manifest.overlays[scheme].
     tagMap_.clear();
     tagSourceFile_.clear();
 
     json manifest;
-    if (!readJsonFile(manifestPath, manifest)) {
+    Logger& log = logSink();
+    if (!readRegistryJsonFile(manifestPath, manifest, log)) {
         return false;
     }
     if (!manifest.is_object() || !manifest.contains("base") || !manifest["base"].is_string()) {
-        Logger::error("Invalid manifest: missing string field 'base'");
+        log.error("Invalid manifest: missing string field 'base'");
         return false;
     }
     if (!manifest.contains("overlays") || !manifest["overlays"].is_object()) {
-        Logger::error("Invalid manifest: missing object field 'overlays'");
+        log.error("Invalid manifest: missing object field 'overlays'");
         return false;
     }
 
@@ -225,7 +178,7 @@ bool TagRegistry::loadManifest(const std::string& manifestPath, const std::strin
 
     const json& overlays = manifest["overlays"];
     if (!overlays.contains(scheme)) {
-        Logger::warning("Manifest has no overlays entry for scheme: " + scheme);
+        log.warning("Manifest has no overlays entry for scheme: " + scheme);
     } else if (overlays[scheme].is_array()) {
         for (const auto& entry : overlays[scheme]) {
             if (!entry.is_string()) {
@@ -236,30 +189,33 @@ bool TagRegistry::loadManifest(const std::string& manifestPath, const std::strin
             layer.filePath = overlayPath;
             layer.schemeLabel = scheme;
             if (!loadRegistryFile(overlayPath, layer)) {
-                Logger::error("Failed to load overlay: " + overlayPath);
+                log.error("Failed to load overlay: " + overlayPath);
                 return false;
             }
         }
     }
 
     if (tagMap_.empty()) {
-        Logger::warning("No tags loaded for scheme: " + scheme);
+        log.warning("No tags loaded for scheme: " + scheme);
         return false;
     }
 
-    Logger::info(
+    emvparse::loadIsoNumericLookupsFromRegistryDir(dir);
+
+    log.info(
         "Tag registry loaded for scheme " + scheme + ": " + std::to_string(tagMap_.size()) + " tags");
     return true;
 }
 
 bool TagRegistry::loadRegistryFile(const std::string& filePath, const MergeLayer& layer) {
+    Logger& log = logSink();
     json root;
-    if (!readJsonFile(filePath, root)) {
+    if (!readRegistryJsonFile(filePath, root, log)) {
         return false;
     }
 
     if (!root.is_object() || !root.contains("tags") || !root["tags"].is_array()) {
-        Logger::error("Invalid registry format (expected object with tags array): " + filePath);
+        log.error("Invalid registry format (expected object with tags array): " + filePath);
         return false;
     }
 
@@ -282,11 +238,11 @@ bool TagRegistry::loadRegistryFile(const std::string& filePath, const MergeLayer
             ++skippedCount;
             continue;
         }
-        const json runtimeJson = tagBodyForRuntime(tagJson);
+        const json runtimeJson = tagBodyForRuntime(tagJson, log);
         auto info = buildTagInfoFromObject(runtimeJson);
         if (!info) {
             ++skippedCount;
-            Logger::warning("Skipping invalid tag entry in " + filePath);
+            log.warning("Skipping invalid tag entry in " + filePath);
             continue;
         }
         if (info->kernel.empty()) {
@@ -295,7 +251,7 @@ bool TagRegistry::loadRegistryFile(const std::string& filePath, const MergeLayer
 
         const auto prev = tagSourceFile_.find(info->tag);
         if (prev != tagSourceFile_.end()) {
-            Logger::info(
+            log.info(
                 "Tag " + info->tag + " overridden: " + prev->second + " -> " + filePath);
         }
 
@@ -304,7 +260,7 @@ bool TagRegistry::loadRegistryFile(const std::string& filePath, const MergeLayer
         ++loadedCount;
     }
 
-    Logger::info(
+    log.info(
         "Loaded " + std::to_string(loadedCount) + " tags from " + filePath +
         (skippedCount > 0 ? " (skipped " + std::to_string(skippedCount) + ")" : ""));
     return loadedCount > 0 || layer.schemeLabel != "base";

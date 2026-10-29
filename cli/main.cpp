@@ -11,7 +11,7 @@
 
 static void printHelp() {
     std::cout
-        << "emvparse — EMV BER-TLV parser (JSON, table, or HTML via tag registry)\n"
+        << "emvparse - EMV BER-TLV parser (JSON, table, or HTML via tag registry)\n"
         << "\n"
         << "Usage:\n"
         << "  emvparse [global-options] <command> [arguments]\n"

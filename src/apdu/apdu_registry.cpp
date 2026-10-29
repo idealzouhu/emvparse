@@ -1,7 +1,7 @@
-#include "emvparse/apdu_parser.h"
+#include "apdu_parser.h"
+#include "registry_io.h"
 #include "logger.h"
 #include <nlohmann/json.hpp>
-#include <fstream>
 #include <cctype>
 #include <sstream>
 #include <iomanip>
@@ -9,61 +9,6 @@
 namespace {
 
 using json = nlohmann::json;
-
-std::string registryDirname(const std::string& path) {
-    const size_t pos = path.find_last_of("/\\");
-    if (pos == std::string::npos) {
-        return ".";
-    }
-    return path.substr(0, pos);
-}
-
-std::string joinRegistryPath(const std::string& dir, const std::string& file) {
-    if (dir.empty() || dir == ".") {
-        return file;
-    }
-    const char last = dir.back();
-    if (last == '/' || last == '\\') {
-        return dir + file;
-    }
-    return dir + "/" + file;
-}
-
-bool readJsonFile(const std::string& filePath, json& out) {
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file.is_open()) {
-        Logger::error("Failed to open file: " + filePath);
-        return false;
-    }
-
-    file.seekg(0, std::ios::end);
-    const size_t fileSize = static_cast<size_t>(file.tellg());
-    if (fileSize == 0) {
-        Logger::error("File is empty: " + filePath);
-        return false;
-    }
-    file.seekg(0, std::ios::beg);
-
-    std::string content;
-    content.resize(fileSize);
-    file.read(&content[0], static_cast<std::streamsize>(fileSize));
-    file.close();
-
-    if (fileSize >= 3 &&
-        static_cast<unsigned char>(content[0]) == 0xEF &&
-        static_cast<unsigned char>(content[1]) == 0xBB &&
-        static_cast<unsigned char>(content[2]) == 0xBF) {
-        content = content.substr(3);
-    }
-
-    try {
-        out = json::parse(content);
-    } catch (const json::parse_error& e) {
-        Logger::error("JSON parse error in file: " + filePath);
-        return false;
-    }
-    return true;
-}
 
 uint8_t parseHexByte(const std::string& hex) {
     return static_cast<uint8_t>(std::stoul(hex, nullptr, 16));
@@ -107,18 +52,24 @@ void loadParamRule(const json& obj, ApduParamRule& rule) {
 
 } // namespace
 
+Logger& ApduRegistry::logSink() const {
+    return logger_ ? *logger_ : Logger::defaultSink();
+}
+
 bool ApduRegistry::loadFromManifest(const std::string& manifestPath) {
+    // Resolves manifest.apduCommands relative to the manifest directory.
     commands_.clear();
     commandIndex_.clear();
     statusWords_.clear();
 
+    Logger& log = logSink();
     json manifest;
-    if (!readJsonFile(manifestPath, manifest)) {
+    if (!readRegistryJsonFile(manifestPath, manifest, log)) {
         return false;
     }
     if (!manifest.is_object() || !manifest.contains("apduCommands") ||
         !manifest["apduCommands"].is_string()) {
-        Logger::warning("Manifest has no apduCommands entry; APDU naming disabled");
+        log.warning("Manifest has no apduCommands entry; APDU naming disabled");
         return true;
     }
 
@@ -127,7 +78,7 @@ bool ApduRegistry::loadFromManifest(const std::string& manifestPath) {
         joinRegistryPath(dir, manifest["apduCommands"].get<std::string>());
 
     json root;
-    if (!readJsonFile(apduPath, root)) {
+    if (!readRegistryJsonFile(apduPath, root, log)) {
         return false;
     }
 
@@ -173,7 +124,7 @@ bool ApduRegistry::loadFromManifest(const std::string& manifestPath) {
         }
     }
 
-    Logger::info(
+    log.info(
         "APDU registry loaded: " + std::to_string(commands_.size()) + " commands, " +
         std::to_string(statusWords_.size()) + " status words");
     return true;
@@ -196,6 +147,7 @@ std::string ApduRegistry::lookupStatusWord(uint16_t sw) const {
     return "";
 }
 
+// ISO 7816 SW1 families used when the exact SW is not in the registry (R-APDU auto-detect).
 bool ApduRegistry::isKnownStatusPattern(uint16_t sw) const {
     if (!lookupStatusWord(sw).empty()) {
         return true;

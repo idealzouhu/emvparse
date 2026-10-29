@@ -7,7 +7,7 @@ Architecture and module overview (English). Extended narrative, diagrams, and ex
 The library implements **BER-TLV** as used in EMV:
 
 - **Tag** — one or more bytes (EMV multi-byte rules: low 5 bits `0x1F` continues).
-- **Length** — currently **short form** only (single byte, 0–127).
+- **Length** — short form (single byte 0–127) and BER-TLV long form (multi-byte length), per `TLVParser::readTlvLength`.
 - **Value** — raw bytes or nested TLV when the tag is **constructed** (first tag byte bit 6 = 1).
 
 Dependencies: C++11, nlohmann/json. No Qt.
@@ -19,10 +19,11 @@ Layered responsibilities:
 | Layer | Components | Role |
 |-------|------------|------|
 | Data | `TLV` | Tag, value, children; no business logic |
-| Parse | `TLVParser` | Bytes/hex → `TLV` tree |
+| Parse (internal) | `TLVParser` | Bytes/hex → `TLV` tree (BER-TLV only) |
+| Facade | `EmvInputParser` | Tag + APDU registries; parse / script / tag-info (CLI parity) |
 | Registry | `TagRegistry` (internal) | Load manifest + JSON overlays |
 | Semantics | `ValueSemanticParser`, `TLVFormatter` (internal) | Map value bytes to JSON fields |
-| Public ops | `tag_registry_ops` | Validate/merge registry files |
+| Registry ops (source tree) | `src/tlv/tag_registry_ops.h` | Validate/merge; used by CLI, not installed |
 
 ```mermaid
 flowchart TB
@@ -34,35 +35,43 @@ flowchart TB
 Data flow:
 
 ```
-hex / bytes → TLVParser → TLV tree
+hex + ParseOutputOptions → EmvInputParser::parseHexWithOptions / parseHexToJson
                 ↓
-         TagRegistry (scheme)
+         classify (TLV / C-APDU / R-APDU) + ApduParser
                 ↓
-         TLVFormatter → JSON (parseHexToJson)
+         TagRegistry + TLVParser (nested bodies)
 ```
 
 ## 3. Public API surface
 
-Installed headers under `include/emvparse/`:
+Installed headers (`cmake --install`, parse-only package):
 
 | Header | Content |
 |--------|---------|
-| `tlv_parser.h` | `TLVParser` |
-| `tlv.h` | `TLV` |
-| `logging.h` | `LogCallback`, `LogLevel` |
-| `tag_registry_ops.h` | Registry validate/merge |
-| `emvparse_global.h` | `EMVPARSE_EXPORT` |
+| `input_parser.h` | `EmvInputParser` |
+| `logging.h` | `LogLevel`, `LogCallback` |
+| `output_options.h` | `ParseOutputOptions`, formats |
+| `tlv.h` | Read-only `TLV` tree |
+| `emvparse_global.h` | `EMVPARSE_EXPORT` (ABI only; included by the headers above—not part of the application API) |
 
-Internal (under `src/`, not installed): `TagRegistry`, `TagInfo`, `TLVFormatter`, `ValueSemanticParser`, `Logger`.
+Applications should `#include` only the first three headers. `emvparse_global.h` must remain on the install path so those headers compile when linking against the shared library (especially on Windows).
 
-Applications should use `TLVParser` and optionally `tag_registry_ops`; do not include internal headers.
+Not installed: everything under `src/` (`tlv_parser.h`, `tag_registry_ops.h`, `TagRegistry`, `TLVFormatter`, …). Build from source or link the CLI to use registry validate/merge.
 
-## 4. TLVParser
+Applications should use `EmvInputParser` + `ParseOutputOptions` only.
+
+## 4. EmvInputParser (facade)
+
+- Pimpl hides `TLVParser` and `ApduRegistry`.
+- `loadRegistry` loads tag rules and APDU commands/status words.
+- `parseHexWithOptions` mirrors `emvparse parse`; `parseScriptFile` / `parseScriptJson` mirror `emvparse script`.
+- `parseHex`, `parseHexToJson`, `getTagInfo`, and `hexToBytes` cover BER-TLV and registry lookup without exposing internal parsers.
+
+## 4.1 TLVParser (internal)
 
 - Parses top-level TLV sequence from buffer or hex string (whitespace allowed in hex).
 - **Constructed tags**: recursion based on tag encoding only (EMV bit 6), not registry.
-- **Registry**: constructor or `loadTagRegistry(manifestPath, scheme)` loads merged tags for semantic JSON and `getTagInfo`.
-- Move-only; not copyable.
+- Used by the facade and unit tests that include `tlv_parser.h` via the `src/` private include path.
 
 ## 5. Tag registry
 
@@ -82,7 +91,9 @@ Subcommands: `parse`, `tag-info`, `registry validate|merge`.
 
 ```
 include/emvparse/   # public headers
-src/                # library implementation
+src/tlv/            # BER-TLV, tag registry, semantics, TLV formatting
+src/apdu/           # APDU registry, C/R-APDU, DOL, transaction script
+src/facade/         # EmvInputParser, output pipeline, logging
 cli/                # command-line tool
 test/               # gtest
 registry/           # manifest, overlay JSON, tag-registry.schema.json (schema not installed)

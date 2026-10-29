@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <emvparse/tlv_parser.h>
+#include <emvparse/input_parser.h>
 #include <emvparse/output_options.h>
 #include <emvparse/tlv.h>
 #include <nlohmann/json.hpp>
@@ -66,11 +66,11 @@ bool tableContainsBitLine(const std::string& table, int byteNum, int bitNum, con
 class TlvSemanticsTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        const std::string manifestPath = "../registry/manifest.json";
-        parser = std::make_unique<TLVParser>(manifestPath, "EMV");
+        const std::string manifestPath = "../../registry/manifest.json";
+        inputParser = std::make_unique<EmvInputParser>(manifestPath, "EMV");
     }
 
-    std::unique_ptr<TLVParser> parser;
+    std::unique_ptr<EmvInputParser> inputParser;
 };
 
 // 测试1: NUMERIC 类型 Value 的语义解析
@@ -78,7 +78,7 @@ TEST_F(TlvSemanticsTest, NumericValueSemantics) {
     // 测试数据: 9F33 02 01 41 (Terminal Country Code)
     // Value = 0x01 0x41 (BCD 编码) = 141 (十进制)
     std::string hexData = "9F33020141";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -102,7 +102,7 @@ TEST_F(TlvSemanticsTest, TextValueSemantics) {
     // 测试数据: 5F20 03 42 6F 62 (Cardholder Name = "Bob")
     // Value = 0x42 0x6F 0x62 (ASCII) = "Bob"
     std::string hexData = "5F2003426F62";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -128,7 +128,7 @@ TEST_F(TlvSemanticsTest, BitFieldValueSemantics) {
     // bits 4-6 = 101 = 5 → ErrorCode (但枚举中没有5，应该是未定义)
     // bits 0-3 = 0000 = 0 → SubStatus = 0
     std::string hexData = "9F6B01D0";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -155,7 +155,7 @@ TEST_F(TlvSemanticsTest, BinaryValueSemantics) {
     // 测试数据: 84 04 A1 B2 C3 D4 (DF Name)
     // Value = 0xA1 0xB2 0xC3 0xD4 (纯二进制数据)
     std::string hexData = "8404A1B2C3D4";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -179,7 +179,7 @@ TEST_F(TlvSemanticsTest, CompositeValueSemantics) {
     // 外层: 6F (FCI Template, 复合标签，bit 6 = 1), Length=4
     // 内层: 95 02 01 41
     std::string hexData = "6F0495020141";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -204,7 +204,7 @@ TEST_F(TlvSemanticsTest, AmountValueSemantics) {
     // 测试数据: 9F02 04 00 00 01 50 (Amount, Authorised)
     // Value = 0x00 0x00 0x01 0x50 (BCD) = 150 (分) = 1.50 (元)
     std::string hexData = "9F020400000150";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -233,7 +233,7 @@ TEST_F(TlvSemanticsTest, MultipleSemanticTypes) {
     // 5F20 03 42 6F 62 (TEXT)
     // 9F6B 01 D0 (BITFIELD)
     std::string hexData = "9F330201415F2003426F629F6B01D0";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 3);
     
@@ -260,7 +260,7 @@ TEST_F(TlvSemanticsTest, NestedCompositeSemantics) {
     // 内层1: 84 04 A1 B2 C3 D4
     // 内层2: 95 02 01 41
     std::string hexData = "6F088404A1B2C3D495020141";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -283,7 +283,7 @@ TEST_F(TlvSemanticsTest, NestedCompositeSemantics) {
 TEST_F(TlvSemanticsTest, EmptyValueSemantics) {
     // 测试数据: 9F33 00 (空 Value)
     std::string hexData = "9F3300";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -300,7 +300,7 @@ TEST_F(TlvSemanticsTest, TagRegistryLoading) {
     
     // 测试 9F33 (EMV base registry)
     std::string hexData = "9F33020141";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
     
     ASSERT_EQ(tlvList.size(), 1);
     EXPECT_EQ(tlvList[0]->tagHex(), "9F33");
@@ -311,9 +311,9 @@ TEST_F(TlvSemanticsTest, TagRegistryLoading) {
 
 // 测试11: BITFIELD 类型 TAG 的详细语义解析（测试多个 bit 位）
 TEST_F(TlvSemanticsTest, BitFieldTypeDetailedSemantics) {
-    const std::string manifestPath = "../registry/manifest.json";
-    auto parserEmv = std::make_unique<TLVParser>(manifestPath, "EMV");
-    
+    const std::string manifestPath = "../../registry/manifest.json";
+    EmvInputParser parserEmv(manifestPath, "EMV");
+
     // 测试数据: TVR 包含多个设置的 bit
     // Byte 1: 0xC0 = 11000000 (b8=1, b7=1)
     //   - b8: Offline data authentication was not performed
@@ -327,7 +327,7 @@ TEST_F(TlvSemanticsTest, BitFieldTypeDetailedSemantics) {
     // Byte 5: 0x10 = 00010000 (b5=1)
     //   - b5: Script processing failed after final GENERATE AC
     std::string hexData = "9505C080402010";
-    auto tlvList = parserEmv->parseHex(hexData);
+    auto tlvList = parserEmv.parseHex(hexData);
     
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -345,7 +345,7 @@ TEST_F(TlvSemanticsTest, BitFieldTypeDetailedSemantics) {
     EXPECT_EQ(value[4], 0x10); // Byte 5: 00010000
     
     // 输出 JSON 内容
-    std::string jsonOutput = parserEmv->parseHexToJson(hexData);
+    std::string jsonOutput = parserEmv.parseHexToJson(hexData);
     std::cout << "\n========== BITFIELD 类型 TAG 详细语义解析 JSON 输出 ==========\n";
     std::cout << jsonOutput << std::endl;
     std::cout << "==============================================================\n" << std::endl;
@@ -368,7 +368,7 @@ TEST_F(TlvSemanticsTest, BitFieldTypeDetailedSemantics) {
     emvparse::ParseOutputOptions tableActive;
     tableActive.format = emvparse::OutputFormat::Table;
     tableActive.formatOptions.semantic = emvparse::SemanticSummary::Active;
-    const std::string tableActiveOut = parserEmv->parseHexWithOptions(hexData, tableActive);
+    const std::string tableActiveOut = parserEmv.parseHexWithOptions(hexData, tableActive);
 
     EXPECT_TRUE(tableContainsBitLine(
         tableActiveOut, 1, 8, "Offline data authentication was not performed"));
@@ -384,11 +384,11 @@ TEST_F(TlvSemanticsTest, BitFieldTypeDetailedSemantics) {
 
 TEST_F(TlvSemanticsTest, AipAflTableHtmlAndJson) {
     const std::string hexData = "770E8202198094081001020120010300";
-    auto tlvList = parser->parseHex(hexData);
+    auto tlvList = inputParser->parseHex(hexData);
     ASSERT_EQ(tlvList.size(), 1);
     EXPECT_EQ(tlvList[0]->tagHex(), "77");
 
-    const std::string jsonOutput = parser->parseHexToJson(hexData);
+    const std::string jsonOutput = inputParser->parseHexToJson(hexData);
     EXPECT_NE(jsonOutput.find("\"82\""), std::string::npos);
     EXPECT_NE(jsonOutput.find("\"bitFields\""), std::string::npos);
     EXPECT_NE(jsonOutput.find("\"94\""), std::string::npos);
@@ -400,7 +400,7 @@ TEST_F(TlvSemanticsTest, AipAflTableHtmlAndJson) {
     emvparse::ParseOutputOptions tableActive;
     tableActive.format = emvparse::OutputFormat::Table;
     tableActive.formatOptions.semantic = emvparse::SemanticSummary::Active;
-    const std::string tableActiveOut = parser->parseHexWithOptions(hexData, tableActive);
+    const std::string tableActiveOut = inputParser->parseHexWithOptions(hexData, tableActive);
     EXPECT_NE(tableActiveOut.find("Application Interchange Profile"), std::string::npos);
     EXPECT_NE(tableActiveOut.find("Application File Locator"), std::string::npos);
     EXPECT_NE(tableActiveOut.find("Cardholder verification is supported"), std::string::npos);
@@ -429,17 +429,25 @@ TEST_F(TlvSemanticsTest, AipAflTableHtmlAndJson) {
     emvparse::ParseOutputOptions tableFull;
     tableFull.format = emvparse::OutputFormat::Table;
     tableFull.formatOptions.semantic = emvparse::SemanticSummary::Full;
-    const std::string tableFullOut = parser->parseHexWithOptions(hexData, tableFull);
+    const std::string tableFullOut = inputParser->parseHexWithOptions(hexData, tableFull);
     EXPECT_NE(tableFullOut.find("SDA not supported"), std::string::npos);
 
     emvparse::ParseOutputOptions htmlOpts;
     htmlOpts.format = emvparse::OutputFormat::Html;
-    const std::string htmlOut = parser->parseHexWithOptions(hexData, htmlOpts);
+    const std::string htmlOut = inputParser->parseHexWithOptions(hexData, htmlOpts);
     EXPECT_NE(htmlOut.find("semantic-full"), std::string::npos);
     EXPECT_NE(htmlOut.find("toggleSemantic"), std::string::npos);
     EXPECT_NE(htmlOut.find("display:none"), std::string::npos);
     EXPECT_NE(htmlOut.find("inactive-bit"), std::string::npos);
     EXPECT_NE(htmlOut.find("RFU (shall be 0)"), std::string::npos);
+    EXPECT_NE(htmlOut.find("SFI 2"), std::string::npos);
+    const std::string detailControl = "onclick=\"toggleSemantic(";
+    size_t toggleCount = 0;
+    for (size_t pos = 0; (pos = htmlOut.find(detailControl, pos)) != std::string::npos; ++pos) {
+        ++toggleCount;
+    }
+    EXPECT_EQ(toggleCount, 1U);
+    EXPECT_EQ(htmlOut.find(detailControl), htmlOut.rfind(detailControl));
     const auto emvPos = bitFieldPositionByMeaning(aipSemantic, "EMV mode not supported");
     ASSERT_TRUE(emvPos.has_value());
     EXPECT_EQ(*emvPos, 15);

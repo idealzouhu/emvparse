@@ -1,7 +1,8 @@
 #ifndef EMVPARSE_DOL_PARSER_H
 #define EMVPARSE_DOL_PARSER_H
 
-#include "emvparse/emvparse_global.h"
+// EMV DOL: tag||length sequences (PDOL/CDOL/DDOL) and splitting command data by DOL layout.
+
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -35,13 +36,13 @@ struct DolPayloadSplitResult {
     bool truncated = false;
 };
 
-EMVPARSE_EXPORT EmvDolListParseResult parseEmvDolList(const std::vector<uint8_t>& bytes);
+EmvDolListParseResult parseEmvDolList(const std::vector<uint8_t>& bytes);
 
-EMVPARSE_EXPORT DolPayloadSplitResult splitDolPayload(
+DolPayloadSplitResult splitDolPayload(
     const std::vector<EmvDolEntry>& dolEntries,
     const std::vector<uint8_t>& payload
 );
 
-EMVPARSE_EXPORT void enrichDolEntryNames(std::vector<EmvDolEntry>& entries, TagRegistry* registry);
+void enrichDolEntryNames(std::vector<EmvDolEntry>& entries, TagRegistry* registry);
 
 #endif // EMVPARSE_DOL_PARSER_H

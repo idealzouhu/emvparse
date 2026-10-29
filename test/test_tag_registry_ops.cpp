@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <emvparse/tag_registry_ops.h>
+#include "tag_registry_ops.h"
 #include <cstdio>
 #include <fstream>
 

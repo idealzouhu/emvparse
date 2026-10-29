@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
-#include <emvparse/tlv_parser.h>
+#include "tlv_parser.h"
 #include <emvparse/tlv.h>
-#include <emvparse/logging.h>
+#include "tlv_tree_formatter.h"
+#include "logger.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -437,7 +438,8 @@ TEST_F(TlvParserStructureTest, ComplexTLVStructureAndSemantic) {
     std::cout << "========================================" << std::endl;
     std::cout << "JSON 格式输出（包含语义信息）:" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::string jsonOutput = parser->parseHexToJson(hexData);
+    std::string jsonOutput =
+        TlvTreeFormatter::toJsonArray(tlvList, parser->tagRegistry());
     std::cout << jsonOutput << std::endl;
     std::cout << std::endl;
     
@@ -614,6 +616,7 @@ TEST_F(TlvParserStructureTest, LogCallback) {
     };
 
     LogCollector collector;
+    Logger logger;
 
     // 定义日志回调函数
     auto logCallback = [&collector](LogLevel level, const std::string& message) {
@@ -624,8 +627,8 @@ TEST_F(TlvParserStructureTest, LogCallback) {
         std::cout << "[Callback] [" << levelStr << "] " << message << std::endl;
     };
 
-    // 设置日志回调
-    parser->setLogCallback(logCallback);
+    parser->setLogger(&logger);
+    logger.setLogCallback(logCallback);
 
     // 测试1: 加载存在的 Tag 规则文件（应该产生 INFO 日志）
     collector.clear();
@@ -687,7 +690,7 @@ TEST_F(TlvParserStructureTest, LogCallback) {
 
     // 测试3: 禁用日志回调（传入 nullptr）
     collector.clear();
-    parser->setLogCallback(nullptr);
+    logger.setLogCallback({});
     
     // 再次加载文件，应该不会调用回调
     loaded = parser->loadTagRegistry("../../registry/manifest.json", "EMV");
@@ -699,7 +702,7 @@ TEST_F(TlvParserStructureTest, LogCallback) {
     EXPECT_EQ(collector.count(), 0) << "禁用回调后，回调函数不应该被调用";
 
     // 测试4: 重新设置回调并验证正常工作
-    parser->setLogCallback(logCallback);
+    logger.setLogCallback(logCallback);
     collector.clear();
     loaded = parser->loadTagRegistry("../../registry/manifest.json", "EMV");
     ASSERT_TRUE(loaded) << "应该成功加载 Tag 规则文件";

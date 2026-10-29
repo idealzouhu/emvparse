@@ -44,10 +44,21 @@ public:
         const emvparse::FormatOptions& options
     );
 
+    /** HTML table fragment only (no document wrapper). */
+    static std::string toHtmlFragment(
+        const std::vector<std::shared_ptr<TLV>>& roots,
+        TagRegistry* registry,
+        const emvparse::FormatOptions& options = emvparse::FormatOptions{}
+    );
+
     static std::string toHtml(
         const std::vector<std::shared_ptr<TLV>>& roots,
-        TagRegistry* registry
+        TagRegistry* registry,
+        const emvparse::FormatOptions& options = emvparse::FormatOptions{}
     );
+
+    static const char* htmlStyles();
+    static const char* htmlToggleScript();
 
     static std::string toTreeText(
         const std::vector<std::shared_ptr<TLV>>& roots,

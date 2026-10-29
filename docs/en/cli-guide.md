@@ -32,12 +32,12 @@ Hex may include spaces and an optional `0x` prefix.
 |--------|--------|--------|
 | `--format` | `json` (default), `table`, `html` | **json** / **table** → stdout (table = plain text, layout varies by input kind); **html** → file (default `report.html`, or `<hex-file>.html` with `--file`). |
 | `--output`, `-o` | path | **HTML only.** Output file; use `-` to print HTML on stdout. |
-| `--semantic` | `active` (default), `full` | **Table only.** `full` prints all bit-field lines; `active` shows set bits (and non-RFU summaries). |
+| `--semantic` | `active` (default), `full` | **BITFIELD tags only** (table and HTML). `full` prints all bit lines; `active` shows set bits. Other tag types always show full value semantics. |
 | `--input` | `auto` (default), `tlv`, `capdu`, `rapdu` | Force interpretation; `auto` tries C-APDU, then R-APDU (body + SW), else TLV. |
 | `--scheme` | `EMV`, `Visa`, `UPI` | Default `EMV`. |
 | `--registry` | path | `manifest.json` or registry directory (`--manifest` alias). |
 
-HTML embeds full semantic detail in the page but **shows the active summary by default**; click **Details** in a value cell to expand or collapse the full bit list (gray lines for unset bits). This fold behavior does not depend on `--semantic`.
+For **BITFIELD** tags, HTML shows an active bit summary by default; click **Details** to expand or collapse the full bit list (gray lines for unset bits). With `--semantic full`, all bit lines are shown inline. Non-BITFIELD values show parsed semantics directly (no **Details**).
 
 ### `script`
 
@@ -56,7 +56,7 @@ Script format (version **1**): required `version` and `steps[]` with `capdu` and
 |--------|--------|--------|
 | `--format` | `json` (default), `table`, `html` | **table** → stepwise Command / Send / Response on stdout; **html** → file (`-o`, default `<script>.html`). |
 | `--output`, `-o` | path | **HTML only.** |
-| `--semantic` | `active`, `full` | **Table only.** |
+| `--semantic` | `active`, `full` | **BITFIELD only** (table and HTML). |
 | `--scheme`, `--registry` | | Same as `parse`. |
 
 ### `tag-info`

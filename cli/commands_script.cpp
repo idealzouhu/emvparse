@@ -2,8 +2,7 @@
 #include "commands_script.h"
 #include "hex_util.h"
 #include "manifest_resolve.h"
-#include <emvparse/tlv_parser.h>
-#include <emvparse/transaction_script.h>
+#include <emvparse/input_parser.h>
 #include <emvparse/output_options.h>
 #include <cstring>
 #include <iostream>
@@ -18,7 +17,7 @@ void printScriptUsage(std::ostream& out) {
         << "Options:\n"
         << "  --format json|table|html  Output format (default: json)\n"
         << "  --output, -o <path>       Write HTML to file (default: <script>.html; - for stdout)\n"
-        << "  --semantic active|full    Semantic detail for table only (default: active)\n"
+        << "  --semantic active|full    BITFIELD detail for table/html (default: active)\n"
         << "  --scheme <EMV|Visa|UPI>   Registry scheme (default: EMV)\n"
         << "  --registry <path>         manifest.json or registry directory\n"
         << "  --manifest <path>         Alias for --registry\n";
@@ -130,62 +129,46 @@ int runScriptCommand(int argc, char* argv[]) {
     i += 2;
 
     ScriptFormatOpts fmt;
-    if (!parseScriptFormatOptions(i, argc, argv, fmt)) {
-        return 1;
-    }
-
     CommonOpts opts;
-    parseCommonOptions(i, argc, argv, opts);
-    if (i < argc) {
-        printScriptUsage(std::cerr);
-        return 1;
+    while (i < argc) {
+        const int before = i;
+        if (!parseScriptFormatOptions(i, argc, argv, fmt)) {
+            return 1;
+        }
+        parseCommonOptions(i, argc, argv, opts);
+        if (i == before) {
+            std::cerr << "error: unknown option: " << argv[i] << "\n";
+            printScriptUsage(std::cerr);
+            return 1;
+        }
     }
 
-    if (fmt.semanticExplicit && fmt.format != emvparse::OutputFormat::Table) {
-        std::cerr << "note: --semantic applies to --format table only; ignored for this output format\n";
+    if (fmt.semanticExplicit && fmt.format == emvparse::OutputFormat::Json) {
+        std::cerr << "note: --semantic does not affect JSON output\n";
     }
     if (fmt.outputExplicit && fmt.format != emvparse::OutputFormat::Html) {
         std::cerr << "error: --output applies to --format html only\n";
         return 1;
     }
 
-    TransactionScript script;
-    std::string loadError;
-    if (!TransactionScriptParser::loadFromFile(scriptPath, script, loadError)) {
-        std::cerr << "error: " << loadError << "\n";
-        return 2;
-    }
-
-    const std::string scheme = !script.scheme.empty() ? script.scheme : opts.scheme;
     const std::string manifest = resolveManifestPath(opts.manifestOverride);
     if (manifest.empty()) {
         std::cerr << "error: manifest not found (set --registry or EMVPARSE_REGISTRY)\n";
         return 2;
     }
 
-    TLVParser parser(manifest, scheme);
-    TransactionScriptParseResult parsed = TransactionScriptParser::parse(parser, script);
-    if (!parsed.error.empty()) {
-        std::cerr << "error: " << parsed.error << "\n";
-        return 3;
-    }
+    EmvInputParser parser(manifest, opts.scheme);
+    emvparse::ParseOutputOptions outputOpts;
+    outputOpts.format = fmt.format;
+    outputOpts.formatOptions.semantic = fmt.semantic;
 
-    emvparse::FormatOptions formatOptions;
-    formatOptions.semantic = fmt.semantic;
-
-    std::string output;
-    TagRegistry* tagRegistry = parser.tagRegistry();
-    switch (fmt.format) {
-    case emvparse::OutputFormat::Table:
-        output = TransactionScriptFormatter::formatTable(parsed, tagRegistry, formatOptions);
-        break;
-    case emvparse::OutputFormat::Html:
-        output = TransactionScriptFormatter::formatHtml(parsed, tagRegistry, formatOptions);
-        break;
-    case emvparse::OutputFormat::Json:
-    default:
-        output = TransactionScriptFormatter::formatJson(parsed, tagRegistry);
-        break;
+    const std::string output = parser.parseScriptFile(scriptPath, outputOpts);
+    if (output.empty()) {
+        const std::string err = parser.lastError();
+        if (!err.empty()) {
+            std::cerr << "error: " << err << "\n";
+        }
+        return err.empty() ? 3 : (err.find("cannot open") != std::string::npos ? 2 : 3);
     }
 
     if (fmt.format == emvparse::OutputFormat::Html) {

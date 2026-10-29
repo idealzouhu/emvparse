@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <emvparse/dol_parser.h>
-#include <emvparse/tlv_parser.h>
+#include "dol_parser.h"
+#include "tlv_parser.h"
 
 namespace {
 

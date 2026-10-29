@@ -1,11 +1,59 @@
 #include "value_semantic_parser.h"
 #include "tag_registry.h"
-#include "emvparse/dol_parser.h"
+#include "dol_parser.h"
+#include "iso_numeric_lookup.h"
 #include <emvparse/tlv.h>
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+
+namespace {
+
+int emvBcdByte(uint8_t byte) {
+    return static_cast<int>(((byte >> 4) & 0x0F) * 10 + (byte & 0x0F));
+}
+
+void enrichNumericWithIsoOrEnumMap(const TagInfo& tagInfo, nlohmann::ordered_json& result) {
+    if (!result.contains("numeric") || !result["numeric"].is_string()) {
+        return;
+    }
+    const std::string digits = result["numeric"].get<std::string>();
+    std::string label;
+    if (!tagInfo.enumRef.empty()) {
+        label = emvparse::lookupIsoByEnumRef(tagInfo.enumRef, digits);
+    }
+    if (label.empty() && !tagInfo.enumMap.empty()) {
+        const std::string key = emvparse::isoNumericLookupKey(digits);
+        auto it = tagInfo.enumMap.find(key);
+        if (it == tagInfo.enumMap.end()) {
+            it = tagInfo.enumMap.find(digits);
+        }
+        if (it != tagInfo.enumMap.end()) {
+            label = it->second;
+        }
+    }
+    if (!label.empty()) {
+        result["enum"] = label;
+    }
+}
+
+nlohmann::ordered_json parseTimeValueBcd(const std::vector<uint8_t>& value) {
+    nlohmann::ordered_json result;
+    if (value.size() != 3) {
+        return result;
+    }
+    const int hour = emvBcdByte(value[0]);
+    const int minute = emvBcdByte(value[1]);
+    const int second = emvBcdByte(value[2]);
+    std::ostringstream oss;
+    oss << std::setfill('0') << std::setw(2) << hour << ":" << std::setw(2) << minute << ":"
+        << std::setw(2) << second;
+    result["time"] = oss.str();
+    return result;
+}
+
+} // namespace
 
 nlohmann::ordered_json ValueSemanticParser::parseValueSemantic(
     const std::shared_ptr<TLV>& tlv,
@@ -26,9 +74,59 @@ nlohmann::ordered_json ValueSemanticParser::parseValueSemantic(
         return result;
     }
 
+    // EMV Book 3 Table 15 — Cryptogram Information Data (CID).
+    if (tagInfo->tag == "9F27" && value.size() == 1) {
+        const uint8_t cid = value[0];
+        static const char* const kCryptogramType[] = {
+            "AAC (Application Authentication Cryptogram - transaction declined)",
+            "TC (Transaction Certificate - approved offline)",
+            "ARQC (Authorisation Request Cryptogram - online authorisation requested)",
+            "RFU (reserved cryptogram type)"};
+        static const char* const kReason[] = {
+            "No information given",
+            "Service not allowed",
+            "PIN Try Limit exceeded",
+            "Issuer authentication failed",
+            "RFU",
+            "RFU",
+            "RFU",
+            "RFU"};
+        nlohmann::ordered_json bitFieldArray = nlohmann::ordered_json::array();
+        auto appendField = [&](int position, int length, const std::string& meaning, uint64_t rawValue) {
+            nlohmann::ordered_json field;
+            field["position"] = position;
+            field["length"] = length;
+            field["meaning"] = meaning;
+            field["rawValue"] = rawValue;
+            bitFieldArray.push_back(field);
+        };
+        const int cryptoType = (cid >> 6) & 0x03;
+        appendField(0, 2, kCryptogramType[cryptoType], static_cast<uint64_t>(cryptoType));
+        const int paymentBits = (cid >> 4) & 0x03;
+        if (paymentBits != 0) {
+            appendField(2, 2, "Payment system-specific cryptogram", static_cast<uint64_t>(paymentBits));
+        }
+        appendField(
+            4,
+            1,
+            (cid & 0x10) ? "Advice required" : "No advice required",
+            static_cast<uint64_t>((cid >> 4) & 0x01));
+        appendField(5, 3, kReason[cid & 0x07], static_cast<uint64_t>(cid & 0x07));
+        result["bitFields"] = bitFieldArray;
+        result["raw"] = tlv->valueHex();
+        return result;
+    }
+
+    if (tagInfo->tag == "9F21" && tagInfo->format == "n" && value.size() == 3) {
+        result = parseTimeValueBcd(value);
+        result["raw"] = tlv->valueHex();
+        return result;
+    }
+
     // Dispatch by registry type.
     if (tagInfo->type == "NUMERIC") {
         result = parseNumericValue(value, tagInfo->format);
+        enrichNumericWithIsoOrEnumMap(*tagInfo, result);
     }
     else if (tagInfo->type == "TEXT") {
         // TEXT: EMV a / an / ans (single-byte characters).
@@ -139,19 +237,23 @@ nlohmann::ordered_json ValueSemanticParser::parseDateValue(
     // Infer layout from byte length:
     // 3: YYMMDD or HHMMSS; 4: YYMMDDHH or MMDD (BCD); 6: YYMMDDHHMMSS (BCD).
     if (value.size() == 3) {
-        // Default: YYMMDD.
+        // EMV n 3: YYMMDD (BCD).
+        const int yy = emvBcdByte(value[0]);
+        const int mm = emvBcdByte(value[1]);
+        const int dd = emvBcdByte(value[2]);
         std::ostringstream oss;
-        oss << "20" << std::setfill('0') << std::setw(2) << static_cast<int>(value[0])
-            << "-" << std::setw(2) << static_cast<int>(value[1])
-            << "-" << std::setw(2) << static_cast<int>(value[2]);
+        oss << "20" << std::setfill('0') << std::setw(2) << yy << "-" << std::setw(2) << mm << "-"
+            << std::setw(2) << dd;
         result["date"] = oss.str();
     } else if (value.size() == 4) {
-        // Assume YYMMDDHH.
+        // EMV n 4: YYMMDDHH (BCD).
+        const int yy = emvBcdByte(value[0]);
+        const int mm = emvBcdByte(value[1]);
+        const int dd = emvBcdByte(value[2]);
+        const int hh = emvBcdByte(value[3]);
         std::ostringstream oss;
-        oss << "20" << std::setfill('0') << std::setw(2) << static_cast<int>(value[0])
-            << "-" << std::setw(2) << static_cast<int>(value[1])
-            << "-" << std::setw(2) << static_cast<int>(value[2])
-            << " " << std::setw(2) << static_cast<int>(value[3]) << ":00:00";
+        oss << "20" << std::setfill('0') << std::setw(2) << yy << "-" << std::setw(2) << mm << "-"
+            << std::setw(2) << dd << " " << std::setw(2) << hh << ":00:00";
         result["date"] = oss.str();
     } else if (value.size() == 6) {
         // BCD YYMMDDHHMMSS.

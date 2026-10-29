@@ -1,7 +1,7 @@
 #include "cli_options.h"
 #include "commands_registry.h"
 #include "manifest_resolve.h"
-#include <emvparse/tag_registry_ops.h>
+#include "tag_registry_ops.h"
 #include <cstring>
 #include <iostream>
 

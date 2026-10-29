@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
-#include <emvparse/tlv_parser.h>
-#include <emvparse/apdu_parser.h>
+#include <emvparse/input_parser.h>
+#include "apdu_parser.h"
+#include "tlv_parser.h"
 #include <emvparse/output_options.h>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -33,7 +34,7 @@ emvparse::ParseOutputOptions tlvForcedOpts() {
 } // namespace
 
 TEST(ApduParserTest, ReadRecordCase2_00B2021400) {
-    TLVParser parser(kManifestPath, "EMV");
+    EmvInputParser parser(kManifestPath, "EMV");
     const std::string hex = "00B2021400";
 
     const std::string jsonOut = parser.parseHexWithOptions(hex, jsonOpts());
@@ -62,8 +63,10 @@ TEST(ApduParserTest, ReadRecordCase2_00B2021400) {
     ApduRegistry registry;
     ASSERT_TRUE(registry.loadFromManifest(kManifestPath));
     std::vector<uint8_t> data = {0x00, 0xB2, 0x02, 0x14, 0x00};
-    const auto consumer = [&parser](const std::vector<uint8_t>& body) {
-        return parser.bytesFullyConsumedAsTlv(body);
+    TLVParser tlvParser;
+    ASSERT_TRUE(tlvParser.loadTagRegistry(kManifestPath, "EMV"));
+    const auto consumer = [&tlvParser](const std::vector<uint8_t>& body) {
+        return tlvParser.bytesFullyConsumedAsTlv(body);
     };
     EXPECT_EQ(
         ApduParser::classifyInput(data, emvparse::InputMode::Auto, &registry, consumer),
@@ -71,7 +74,7 @@ TEST(ApduParserTest, ReadRecordCase2_00B2021400) {
 }
 
 TEST(ApduParserTest, GpoCapdu_80A8000002830000) {
-    TLVParser parser(kManifestPath, "EMV");
+    EmvInputParser parser(kManifestPath, "EMV");
     const std::string hex = "80A8000002830000";
     const std::string jsonOut = parser.parseHexWithOptions(hex, jsonOpts());
     auto root = nlohmann::json::parse(jsonOut);
@@ -84,7 +87,7 @@ TEST(ApduParserTest, GpoCapdu_80A8000002830000) {
 }
 
 TEST(ApduParserTest, PureTlv_770E) {
-    TLVParser parser(kManifestPath, "EMV");
+    EmvInputParser parser(kManifestPath, "EMV");
     const std::string hex = "770E8202198094081001020120010300";
     const std::string jsonOut = parser.parseHexWithOptions(hex, jsonOpts());
     auto root = nlohmann::json::parse(jsonOut);
@@ -94,7 +97,7 @@ TEST(ApduParserTest, PureTlv_770E) {
 }
 
 TEST(ApduParserTest, Rapdu_Fci9000) {
-    TLVParser parser(kManifestPath, "EMV");
+    EmvInputParser parser(kManifestPath, "EMV");
     const std::string hex =
         "6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000";
     const std::string jsonOut = parser.parseHexWithOptions(hex, jsonOpts());
@@ -108,7 +111,7 @@ TEST(ApduParserTest, Rapdu_Fci9000) {
 }
 
 TEST(ApduParserTest, ForcedTlv_Includes9000Suffix) {
-    TLVParser parser(kManifestPath, "EMV");
+    EmvInputParser parser(kManifestPath, "EMV");
     const std::string hex =
         "6F29840E325041592E5359532E4444463031A517BF0C1461129F2A038106438701014F07A00000065810109000";
     const std::string jsonOut = parser.parseHexWithOptions(hex, tlvForcedOpts());

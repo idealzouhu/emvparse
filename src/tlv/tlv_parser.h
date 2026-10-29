@@ -1,18 +1,17 @@
 #ifndef EMVPARSE_TLV_PARSER_H
 #define EMVPARSE_TLV_PARSER_H
 
-#include "tlv.h"
-#include "output_options.h"
-#include "logging.h"
+#include "emvparse/logging.h"
+#include "emvparse/tlv.h"
 #include <memory>
 #include <vector>
 #include <string>
-#include <functional>
 
+class Logger;
 class TagRegistry;
-class ApduRegistry;
 
-class EMVPARSE_EXPORT TLVParser {
+/** BER-TLV decode (ISO 8825) with optional TagRegistry for metadata lookup. */
+class TLVParser {
 public:
     TLVParser();
 
@@ -23,8 +22,10 @@ public:
     TLVParser(const TLVParser&) = delete;
     TLVParser& operator=(const TLVParser&) = delete;
 
-    TLVParser(TLVParser&&) noexcept;
-    TLVParser& operator=(TLVParser&&) noexcept;
+    TLVParser(TLVParser&&) noexcept = default;
+    TLVParser& operator=(TLVParser&&) noexcept = default;
+
+    void setLogger(Logger* logger);
 
     bool loadTagRegistry(const std::string& manifestPath, const std::string& scheme);
 
@@ -32,26 +33,23 @@ public:
 
     std::vector<std::shared_ptr<TLV>> parseHex(const std::string& hexStr);
 
-    std::string parseBytesToJson(const std::vector<uint8_t>& data);
-
-    std::string parseHexToJson(const std::string& hexStr);
-
-    std::string parseHexWithOptions(const std::string& hexStr, const emvparse::ParseOutputOptions& options);
-
+    /** Used by R-APDU auto-detection: response body must be wholly valid TLV. */
     bool bytesFullyConsumedAsTlv(const std::vector<uint8_t>& data) const;
 
     std::string getTagInfo(const std::string& tagHex) const;
 
-    TagRegistry* tagRegistry() const { return registry_; }
-    ApduRegistry* apduRegistry() const { return apduRegistry_; }
+    TagRegistry* tagRegistry() const { return registry_.get(); }
 
     static std::vector<uint8_t> hexToBytes(const std::string& hexStr);
 
-    void setLogCallback(LogCallback callback);
+    /** Display-only: wire node plus attached children (does not mutate the original TLV). */
+    static std::shared_ptr<TLV> displayWithChildren(
+        const std::shared_ptr<TLV>& wire,
+        const std::vector<std::shared_ptr<TLV>>& children
+    );
 
 private:
-    TagRegistry* registry_;
-    class ApduRegistry* apduRegistry_;
+    std::unique_ptr<TagRegistry> registry_;
 
     std::shared_ptr<TLV> parseTLV(const std::vector<uint8_t>& data, size_t& offset);
 
@@ -60,8 +58,6 @@ private:
     bool isCompositeTag(const std::vector<uint8_t>& tag);
 
     static bool readTlvLength(const std::vector<uint8_t>& data, size_t& offset, size_t& lengthOut);
-
-    std::vector<uint8_t> hexStringToBytes(const std::string& hexStr) const;
 };
 
 #endif // EMVPARSE_TLV_PARSER_H

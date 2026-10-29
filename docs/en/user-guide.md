@@ -70,30 +70,38 @@ CMake options: `BUILD_EMVPARSE_CLI` (default ON), `BUILD_TESTING` (default ON).
 
 ## 4. API reference
 
-### TLVParser
+### EmvInputParser
 
-**Constructors**
-
-```cpp
-TLVParser();
-TLVParser(const std::string& manifestPath, const std::string& scheme);
-```
-
-**Methods**
+Recommended entry point: loads **tag registry + APDU command manifest**, classifies input (`auto` / `tlv` / `capdu` / `rapdu`), and emits JSON, table, or HTML. For integration, include `input_parser.h`, `output_options.h`, and/or `tlv.h` only. `emvparse_global.h` is installed as an ABI helper (export/import macros) and is included transitively—do not use it directly.
 
 ```cpp
-bool loadTagRegistry(const std::string& manifestPath, const std::string& scheme);
-std::vector<std::shared_ptr<TLV>> parseBytes(const std::vector<uint8_t>& data);
-std::vector<std::shared_ptr<TLV>> parseHex(const std::string& hexStr);
-std::string parseBytesToJson(const std::vector<uint8_t>& data);
-std::string parseHexToJson(const std::string& hexStr);
-std::string getTagInfo(const std::string& tagHex) const;
-void setLogCallback(LogCallback callback);
+#include <emvparse/input_parser.h>
+#include <emvparse/output_options.h>
+
+EmvInputParser parser("registry/manifest.json", "EMV");
+emvparse::ParseOutputOptions opts;
+opts.format = emvparse::OutputFormat::Json;
+opts.input = emvparse::InputMode::Auto;
+std::cout << parser.parseHexWithOptions("00B2021400", opts) << std::endl;
 ```
+
+| Method | Role |
+|--------|------|
+| `loadRegistry(manifestPath, scheme)` | Reload tag + APDU manifest |
+| `parseHexWithOptions(hex, opts)` | CLI `parse` parity (TLV / C-APDU / R-APDU) |
+| `parseHex(hex)` | BER-TLV tree (`std::vector<std::shared_ptr<TLV>>`) |
+| `parseHexToJson(hex)` | BER-TLV with registry semantics → JSON |
+| `getTagInfo(tagHex)` | Tag metadata JSON or empty if unknown |
+| `parseScriptFile(path, opts)` / `parseScriptJson(json, opts)` | Transaction script → formatted string |
+| `lastError()` | Error text after failed `loadRegistry`, invalid hex on `parseHex` / `parseHexToJson`, empty result from `parseHexWithOptions`, or script helpers |
+| `hexToBytes(hex)` | Static hex normalizer (shared with CLI) |
+| `setLogCallback(cb)` | Diagnostic logging (`LogLevel`, `LogCallback` in this header) |
+
+On failure, `loadRegistry` returns `false` and sets `lastError()`. Invalid hex makes `parseHex` / `parseHexToJson` return empty results with `lastError()` set. Script helpers and failed `parseHexWithOptions` return an empty string and set `lastError()`.
 
 Nested TLV: EMV **constructed tag** (tag byte bit 6 set) is parsed recursively into `TLV::children` without requiring the registry.
 
-`getTagInfo` returns JSON metadata or empty string if the tag is unknown or no registry is loaded.
+`TLVParser`, `ApduParser`, and transaction-script types live in internal headers under `src/` (not installed), alongside `tag_registry.h` and similar. Use `EmvInputParser` unless you build against the source tree and need white-box tests.
 
 ### TLV
 
@@ -106,29 +114,25 @@ std::string valueHex() const;
 std::string lengthHex() const;
 ```
 
-### Registry ops (optional)
+### Registry ops (source tree / CLI only)
 
-```cpp
-#include <emvparse/tag_registry_ops.h>
-```
-
-`validateAllSchemes`, `mergeSchemeToFile` — see [tag-registry-data-model.md](tag-registry-data-model.md).
+`validateAllSchemes` and `mergeSchemeToFile` are exported from the library but **`tag_registry_ops.h` is not installed** — use the `emvparse registry` CLI or build from source with `src/tlv/tag_registry_ops.h`. See [tag-registry-data-model.md](tag-registry-data-model.md).
 
 ---
 
 ## 5. Examples
 
-Parse hex without registry:
+Parse hex without registry (structure only):
 
 ```cpp
-TLVParser parser;
+EmvInputParser parser;
 auto list = parser.parseHex("9F33020141");
 ```
 
 Parse with semantics (JSON):
 
 ```cpp
-TLVParser parser("registry/manifest.json", "EMV");
+EmvInputParser parser("registry/manifest.json", "EMV");
 std::cout << parser.parseHexToJson("95058000000000") << std::endl;
 ```
 
@@ -154,7 +158,7 @@ Binary: `build/bin/emvparse_tests` (or `emvparse_tests.exe` on Windows).
 
 **Nested TLV** — automatic via EMV constructed bit; registry not required for structure.
 
-**Tag rules** — `loadTagRegistry(".../manifest.json", "EMV"|"Visa"|"UPI")`. See [tag-registry-data-model.md](tag-registry-data-model.md) and [../../registry/tag-registry.schema.json](../../registry/tag-registry.schema.json).
+**Tag rules** — `EmvInputParser::loadRegistry` loads tag + APDU manifests. See [tag-registry-data-model.md](tag-registry-data-model.md) and [../../registry/tag-registry.schema.json](../../registry/tag-registry.schema.json).
 
 **nlohmann/json** — use vcpkg or allow FetchContent on configure.
 

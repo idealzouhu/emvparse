@@ -17,7 +17,13 @@ target_compile_definitions(emvparse_cli
 
 target_link_libraries(emvparse_cli PRIVATE EmvParse)
 
-target_include_directories(emvparse_cli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+set(EMVPARSE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+target_include_directories(emvparse_cli
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${EMVPARSE_SRC}
+        ${EMVPARSE_SRC}/tlv
+)
 
 if(MSVC)
     target_compile_options(emvparse_cli PRIVATE /utf-8)

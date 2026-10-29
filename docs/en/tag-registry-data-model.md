@@ -112,7 +112,8 @@ Future work: `getTagInfo(tag, parentStack)` to select a variant; not implemented
 
 ## API
 
-- **`TLVParser::loadTagRegistry(manifestPath, scheme)`** — only supported entry.
+- **`TLVParser::loadTagRegistry(manifestPath, scheme)`** — tag rules only.
+- **`EmvInputParser::loadRegistry(manifestPath, scheme)`** — tag rules plus APDU manifest (`apdu-commands.json` via `manifest.json`).
 - **`TagRegistry::loadManifest(manifestPath, scheme)`** — internal; merges per manifest.
 
 ## Tooling

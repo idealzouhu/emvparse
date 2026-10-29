@@ -1,15 +1,14 @@
 #ifndef EMVPARSE_TRANSACTION_SCRIPT_H
 #define EMVPARSE_TRANSACTION_SCRIPT_H
 
-#include "emvparse/apdu_parser.h"
-#include "emvparse/dol_parser.h"
-#include "emvparse/emvparse_global.h"
+#include "apdu_parser.h"
+#include "dol_parser.h"
 #include "emvparse/output_options.h"
 #include <string>
 #include <vector>
 
-class TLVParser;
 class TagRegistry;
+struct EmvParseContext;
 
 struct TransactionScriptStepInput {
     std::string capduHex;
@@ -23,6 +22,7 @@ struct TransactionScript {
     std::vector<TransactionScriptStepInput> steps;
 };
 
+/** DOL lists learned from earlier script steps (9F38/8C/8D/9F49 in parsed TLV trees). */
 struct ScriptDolContext {
     std::vector<EmvDolEntry> pdol;
     std::vector<EmvDolEntry> cdol1;
@@ -47,17 +47,21 @@ struct TransactionScriptParseResult {
     std::string error;
 };
 
-class EMVPARSE_EXPORT TransactionScriptParser {
+class TransactionScriptParser {
 public:
     static bool loadFromJsonString(const std::string& json, TransactionScript& out, std::string& error);
     static bool loadFromFile(const std::string& path, TransactionScript& out, std::string& error);
 
-    static TransactionScriptParseResult parse(TLVParser& parser, const TransactionScript& script);
+    /** Sequential steps: parse C/R-APDU, expand DOL using accumulated ScriptDolContext. */
+    static TransactionScriptParseResult parse(
+        EmvParseContext& context,
+        const TransactionScript& script
+    );
 
     static std::string deriveStepTitle(const ApduParseResult& capdu);
 };
 
-class EMVPARSE_EXPORT TransactionScriptFormatter {
+class TransactionScriptFormatter {
 public:
     static std::string formatJson(
         const TransactionScriptParseResult& result,

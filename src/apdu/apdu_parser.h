@@ -1,9 +1,8 @@
 #ifndef EMVPARSE_APDU_PARSER_H
 #define EMVPARSE_APDU_PARSER_H
 
-#include "emvparse/emvparse_global.h"
 #include "emvparse/output_options.h"
-#include "emvparse/dol_parser.h"
+#include "dol_parser.h"
 #include "emvparse/tlv.h"
 #include <cstdint>
 #include <functional>
@@ -33,9 +32,12 @@ struct ApduCommandInfo {
     ApduParamRule p2;
 };
 
-class EMVPARSE_EXPORT ApduRegistry {
+/** Command templates and status-word meanings from registry/apdu-commands.json (via manifest). */
+class ApduRegistry {
 public:
     bool loadFromManifest(const std::string& manifestPath);
+
+    void setLogger(class Logger* logger);
 
     const ApduCommandInfo* findCommand(uint8_t cla, uint8_t ins) const;
     std::string lookupStatusWord(uint16_t sw) const;
@@ -44,6 +46,10 @@ public:
     std::size_t commandCount() const { return commands_.size(); }
 
 private:
+    class Logger* logger_ = nullptr;
+
+    class Logger& logSink() const;
+
     std::vector<ApduCommandInfo> commands_;
     std::unordered_map<uint32_t, std::size_t> commandIndex_;
     std::unordered_map<uint16_t, std::string> statusWords_;
@@ -87,10 +93,12 @@ struct ApduParseResult {
     bool format1Expanded = false;
 };
 
+/** True when the byte range is a complete BER-TLV sequence (no trailing garbage). */
 using TlvBodyConsumer = std::function<bool(const std::vector<uint8_t>& body)>;
 
-class EMVPARSE_EXPORT ApduParser {
+class ApduParser {
 public:
+    /** InputMode::Auto prefers C-APDU (registry CLA/INS), then R-APDU, else TLV. */
     static ParsedInputKind classifyInput(
         const std::vector<uint8_t>& data,
         emvparse::InputMode mode,
@@ -122,20 +130,10 @@ public:
         const std::vector<EmvDolEntry>& ddol
     );
 
-    static std::string formatCapduSendBlock(const ApduParseResult& result);
-    /** Script table: aligned CLA/INS/P1/... lines without repeating the command title row. */
-    static std::string formatCapduScriptFields(const ApduParseResult& result);
-    static std::string formatCapduHtmlSendBlock(const ApduParseResult& result);
-
     static std::string bytesToHexUpper(const std::vector<uint8_t>& data);
 
-    static std::string formatJson(const ApduParseResult& result, TagRegistry* tagRegistry);
-    static std::string formatTable(
-        const ApduParseResult& result,
-        TagRegistry* tagRegistry,
-        const emvparse::FormatOptions& options
-    );
-    static std::string formatHtml(const ApduParseResult& result, TagRegistry* tagRegistry);
+    /** Text/table/HTML tree: pseudo-composite tag 80 when Format 1 fields were expanded. */
+    static std::vector<std::shared_ptr<TLV>> displayBodyRoots(const ApduParseResult& result);
 
 private:
     static void enrichCommandSemantics(ApduParseResult& result);

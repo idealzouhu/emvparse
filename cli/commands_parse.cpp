@@ -2,7 +2,7 @@
 #include "commands_parse.h"
 #include "hex_util.h"
 #include "manifest_resolve.h"
-#include <emvparse/tlv_parser.h>
+#include <emvparse/input_parser.h>
 #include <emvparse/output_options.h>
 #include <cstring>
 #include <iostream>
@@ -20,7 +20,7 @@ void printParseUsage(std::ostream& out) {
         << "  --format json|table|html  Output format (default: json)\n"
         << "  --output, -o <path>       Write HTML to file (default: report.html, or\n"
         << "                            <hex-file>.html with --file; use - for stdout)\n"
-        << "  --semantic active|full    Semantic detail for table only (default: active)\n"
+        << "  --semantic active|full    BITFIELD detail for table/html (default: active)\n"
         << "  --input auto|tlv|capdu|rapdu  Input interpretation (default: auto)\n"
         << "  --scheme <EMV|Visa|UPI>   Registry scheme (default: EMV)\n"
         << "  --registry <path>         manifest.json or registry directory\n"
@@ -195,17 +195,21 @@ int runParseCommand(int argc, char* argv[]) {
     }
 
     ParseFormatOpts fmt;
-    if (!parseParseFormatOptions(i, argc, argv, fmt)) {
-        return 1;
-    }
-    parseCommonOptions(i, argc, argv, opts);
-    if (i < argc) {
-        printParseUsage(std::cerr);
-        return 1;
+    while (i < argc) {
+        const int before = i;
+        if (!parseParseFormatOptions(i, argc, argv, fmt)) {
+            return 1;
+        }
+        parseCommonOptions(i, argc, argv, opts);
+        if (i == before) {
+            std::cerr << "error: unknown option: " << argv[i] << "\n";
+            printParseUsage(std::cerr);
+            return 1;
+        }
     }
 
-    if (fmt.semanticExplicit && fmt.format != emvparse::OutputFormat::Table) {
-        std::cerr << "note: --semantic applies to --format table only; ignored for this output format\n";
+    if (fmt.semanticExplicit && fmt.format == emvparse::OutputFormat::Json) {
+        std::cerr << "note: --semantic does not affect JSON output\n";
     }
     if (fmt.outputExplicit && fmt.format != emvparse::OutputFormat::Html) {
         std::cerr << "error: --output applies to --format html only\n";
@@ -223,7 +227,7 @@ int runParseCommand(int argc, char* argv[]) {
         return 2;
     }
 
-    TLVParser parser(manifest, opts.scheme);
+    EmvInputParser parser(manifest, opts.scheme);
     emvparse::ParseOutputOptions outputOpts;
     outputOpts.format = fmt.format;
     outputOpts.formatOptions.semantic = fmt.semantic;
@@ -287,7 +291,7 @@ int runTagInfoCommand(int argc, char* argv[]) {
         return 2;
     }
 
-    TLVParser parser(manifest, opts.scheme);
+    EmvInputParser parser(manifest, opts.scheme);
     const std::string info = parser.getTagInfo(tagHex);
     if (info.empty()) {
         std::cerr << "tag not found in registry: " << tagHex << "\n";
