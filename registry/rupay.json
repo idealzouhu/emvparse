@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "scheme": "RuPay",
+    "spec": {
+      "document": "RuPay_Terminal_Specification_2.0.pdf",
+      "version": "2.0",
+      "sections": [
+        "Appendix F Data Elements Table",
+        "Table 12–17 service tags"
+      ]
+    },
+    "extends": "emv.json",
+    "generated": "2026-10-29"
+  },
+  "tags": [
+    {
+      "tag": "DF03",
+      "name": "Service Availability Info",
+      "description": "RuPay service availability bitmap for multi-service cards.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "RuPay"
+    },
+    {
+      "tag": "DF07",
+      "name": "Service Directory",
+      "description": "Directory of available RuPay services on the card.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "RuPay"
+    },
+    {
+      "tag": "DF15",
+      "name": "Service Management Info",
+      "description": "Service lifecycle and management metadata.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "RuPay"
+    },
+    {
+      "tag": "DF16",
+      "name": "Service ID",
+      "description": "Identifies a RuPay service instance.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "2",
+      "source": "ICC",
+      "scheme": "RuPay"
+    },
+    {
+      "tag": "DF32",
+      "name": "Service Folder",
+      "description": "Groups service-related records.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "RuPay"
+    },
+    {
+      "tag": "DF33",
+      "name": "Service Related Data",
+      "description": "Service payload returned in GPO or READ RECORD.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "RuPay"
+    },
+    {
+      "tag": "DF52",
+      "name": "Service Control",
+      "description": "Controls service selection and updates.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "RuPay"
+    },
+    {
+      "tag": "DF55",
+      "name": "Transaction Approval Code",
+      "description": "RuPay service transaction approval code.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "Terminal",
+      "scheme": "RuPay"
+    }
+  ]
+}

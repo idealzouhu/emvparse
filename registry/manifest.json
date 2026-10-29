@@ -4,7 +4,13 @@
   "overlays": {
     "EMV": ["contactless-entry-point.json"],
     "Visa": ["contactless-entry-point.json", "visa.json"],
-    "UPI": ["contactless-entry-point.json", "upi.json"]
+    "UPI": ["contactless-entry-point.json", "upi.json"],
+    "Mastercard": ["contactless-entry-point.json", "mastercard.json"],
+    "Amex": ["contactless-entry-point.json", "amex.json"],
+    "JCB": ["contactless-entry-point.json", "jcb.json"],
+    "Discover": ["contactless-entry-point.json", "discover.json"],
+    "MIR": ["contactless-entry-point.json", "mir.json"],
+    "RuPay": ["contactless-entry-point.json", "rupay.json"]
   },
   "defaultScheme": "EMV"
 }

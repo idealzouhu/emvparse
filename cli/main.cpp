@@ -27,7 +27,7 @@ static void printHelp() {
         << "  -V, --version    Print version\n"
         << "\n"
         << "Common options (parse, tag-info, registry):\n"
-        << "  --scheme <name>     Payment scheme: EMV (default), Visa, UPI\n"
+        << "  --scheme <name>     Payment scheme from manifest (EMV, Visa, UPI, Mastercard, Amex, JCB, Discover, MIR, RuPay)\n"
         << "  --registry <path>   manifest.json or directory that contains it\n"
         << "                      (alias: --manifest)\n"
         << "\n"

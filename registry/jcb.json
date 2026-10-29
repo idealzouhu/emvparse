@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "scheme": "JCB",
+    "spec": {
+      "document": "C-5_Kernel-5_v2.12-1.pdf",
+      "version": "2.12",
+      "sections": [
+        "Annex A.8 Terminal Compatibility Indicator",
+        "Annex A.9 Terminal Interchange Profile"
+      ]
+    },
+    "extends": "emv.json",
+    "generated": "2026-10-29"
+  },
+  "tags": [
+    {
+      "tag": "9F52",
+      "name": "Terminal Compatibility Indicator",
+      "description": "Legacy vs EMV contactless mode indicator; Kernel 5 sets dynamic value during processing and may request in PDOL.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "1",
+      "source": "Terminal",
+      "scheme": "JCB"
+    },
+    {
+      "tag": "9F53",
+      "name": "Terminal Interchange Profile",
+      "description": "Static configuration defines reader CVM and capabilities; dynamic copy (same tag) updated by Kernel 5 during the transaction.",
+      "type": "BITFIELD",
+      "format": "b",
+      "length": "3",
+      "source": "Terminal",
+      "scheme": "JCB",
+      "bitFields": [
+        {
+          "position": 0,
+          "length": 1,
+          "name": "CVM required by reader",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 1,
+          "length": 1,
+          "name": "Signature supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 2,
+          "length": 1,
+          "name": "EMV contact chip supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 3,
+          "length": 1,
+          "name": "Reader is a transit reader",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 4,
+          "length": 1,
+          "name": "Online PIN supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 5,
+          "length": 1,
+          "name": "CDCVM supported",
+          "type": "BOOLEAN"
+        }
+      ]
+    },
+    {
+      "tag": "9F50",
+      "name": "Cardholder Verification Status",
+      "description": "Kernel 5-specific CVM processing status from the card.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "1",
+      "source": "ICC",
+      "scheme": "JCB"
+    },
+    {
+      "tag": "9F60",
+      "name": "Issuer Update Parameter",
+      "description": "Parameters for JCB issuer update processing.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "JCB"
+    },
+    {
+      "tag": "9F6E",
+      "name": "Device Information",
+      "description": "Device form-factor and reader interaction hints for Kernel 5 (not Visa FFI).",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "JCB"
+    },
+    {
+      "tag": "9F7C",
+      "name": "Partner Discretionary Data",
+      "description": "Partner-specific discretionary data for Kernel 5.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "JCB"
+    }
+  ]
+}

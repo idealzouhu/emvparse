@@ -10,9 +10,9 @@
         "Chapter 6 — Commands between ICC and terminal",
         "Annex A — EMV command coding (CLA/INS reference)"
       ],
-      "note": "APDU case layout and status bytes SW1–SW2 also follow ISO/IEC 7816-4."
+      "note": "APDU case layout and status bytes SW1–SW2 also follow ISO/IEC 7816-4. Contactless kernel and RuPay extensions reference EMVCo Kernel 2/Book B and RuPay Terminal Specification 2.0."
     },
-    "generated": "2026-10-27"
+    "generated": "2026-10-29"
   },
   "commands": [
     {
@@ -175,6 +175,232 @@
       "p2": {
         "name": "Reference control (P2)"
       }
+    },
+    {
+      "cla": "80",
+      "ins": "DA",
+      "name": "PUT DATA",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Tag high byte (P1)",
+        "tagReference": true
+      },
+      "p2": {
+        "name": "Tag low byte (P2)",
+        "tagReference": true
+      }
+    },
+    {
+      "cla": "0C",
+      "ins": "DA",
+      "name": "PUT DATA",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Tag high byte (P1)",
+        "tagReference": true
+      },
+      "p2": {
+        "name": "Tag low byte (P2)",
+        "tagReference": true,
+        "description": "RuPay: secure messaging (MAC) in command data"
+      }
+    },
+    {
+      "cla": "80",
+      "ins": "EA",
+      "name": "EXCHANGE RELAY RESISTANCE DATA",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      }
+    },
+    {
+      "cla": "80",
+      "ins": "1A",
+      "name": "SEND POI INFORMATION",
+      "dataFormat": "ber_tlv",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      }
+    },
+    {
+      "cla": "8C",
+      "ins": "16",
+      "name": "CARD BLOCK",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      }
+    },
+    {
+      "cla": "8C",
+      "ins": "18",
+      "name": "APPLICATION UNBLOCK",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      }
+    },
+    {
+      "cla": "8C",
+      "ins": "1E",
+      "name": "APPLICATION BLOCK",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      }
+    },
+    {
+      "cla": "84",
+      "ins": "24",
+      "name": "PIN CHANGE/UNBLOCK",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options",
+          "01": "PIN change",
+          "02": "PIN unblock",
+          "03": "PIN change and unblock",
+          "04": "PIN change using current PIN"
+        }
+      }
+    },
+    {
+      "cla": "80",
+      "ins": "D0",
+      "name": "RECOVER AC",
+      "dataFormat": "ber_tlv",
+      "p1": {
+        "name": "Reference control (P1)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "enumMap": {
+          "00": "No special options"
+        }
+      }
+    },
+    {
+      "cla": "00",
+      "ins": "B3",
+      "name": "READ SERVICE RECORD",
+      "dataFormat": "none",
+      "p1": {
+        "name": "Record number (P1)",
+        "numericRecord": true
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "sfiShift": 3
+      }
+    },
+    {
+      "cla": "0C",
+      "ins": "DC",
+      "name": "UPDATE RECORD",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Record number (P1)",
+        "numericRecord": true
+      },
+      "p2": {
+        "name": "Reference control (P2)",
+        "sfiShift": 3
+      }
+    },
+    {
+      "cla": "0C",
+      "ins": "DD",
+      "name": "UPDATE SERVICE DATA",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Service index (P1)",
+        "numericRecord": true
+      },
+      "p2": {
+        "name": "Reference control (P2)"
+      }
+    },
+    {
+      "cla": "0C",
+      "ins": "DE",
+      "name": "UPDATE SERVICE STATUS",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Service index (P1)",
+        "numericRecord": true
+      },
+      "p2": {
+        "name": "Reference control (P2)"
+      }
+    },
+    {
+      "cla": "0C",
+      "ins": "DF",
+      "name": "UPDATE PRMacq KEY",
+      "dataFormat": "binary",
+      "p1": {
+        "name": "Service index (P1)",
+        "numericRecord": true
+      },
+      "p2": {
+        "name": "Reference control (P2)"
+      }
     }
   ],
   "statusWords": [
@@ -188,6 +414,10 @@
     { "sw": "6A86", "meaning": "Incorrect P1 P2" },
     { "sw": "6A88", "meaning": "Referenced data not found" },
     { "sw": "6700", "meaning": "Wrong length" },
-    { "sw": "6982", "meaning": "Security status not satisfied" }
+    { "sw": "6982", "meaning": "Security status not satisfied" },
+    { "sw": "6983", "meaning": "Authentication method blocked" },
+    { "sw": "6400", "meaning": "No further records / execution error" },
+    { "sw": "6D00", "meaning": "Instruction code not supported" },
+    { "sw": "6E00", "meaning": "Class not supported" }
   ]
 }

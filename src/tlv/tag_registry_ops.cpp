@@ -89,7 +89,26 @@ json tagInfoToJson(const TagInfo& info) {
 
 RegistryValidationResult validateAllSchemes(const std::string& manifestPath) {
     RegistryValidationResult result;
-    for (const char* scheme : {"EMV", "Visa", "UPI"}) {
+    std::ifstream in(manifestPath, std::ios::binary);
+    if (!in.is_open()) {
+        SchemeValidationResult schemeResult;
+        schemeResult.scheme = "(manifest)";
+        schemeResult.loadOk = false;
+        schemeResult.loadError = "failed to open manifest";
+        result.schemes.push_back(schemeResult);
+        return result;
+    }
+    json manifest = json::parse(in, nullptr, false);
+    if (manifest.is_discarded() || !manifest.contains("overlays") || !manifest["overlays"].is_object()) {
+        SchemeValidationResult schemeResult;
+        schemeResult.scheme = "(manifest)";
+        schemeResult.loadOk = false;
+        schemeResult.loadError = "invalid manifest overlays";
+        result.schemes.push_back(schemeResult);
+        return result;
+    }
+    for (auto it = manifest["overlays"].begin(); it != manifest["overlays"].end(); ++it) {
+        const std::string scheme = it.key();
         SchemeValidationResult schemeResult;
         schemeResult.scheme = scheme;
         TagRegistry reg;

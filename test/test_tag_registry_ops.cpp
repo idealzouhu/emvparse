@@ -6,7 +6,7 @@
 TEST(TagRegistryOps, ValidateAllSchemes) {
     const std::string manifestPath = "../../registry/manifest.json";
     const RegistryValidationResult result = validateAllSchemes(manifestPath);
-    ASSERT_EQ(result.schemes.size(), 3u);
+    ASSERT_EQ(result.schemes.size(), 9u);
     for (const auto& scheme : result.schemes) {
         EXPECT_TRUE(scheme.loadOk) << scheme.scheme;
         EXPECT_GT(scheme.tagCount, 0u) << scheme.scheme;

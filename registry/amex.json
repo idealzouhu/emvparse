@@ -1,0 +1,107 @@
+{
+  "metadata": {
+    "scheme": "Amex",
+    "spec": {
+      "document": "Kernel-C-4-Specification-v2.12.pdf",
+      "version": "2.12",
+      "sections": [
+        "Table 4-2 Contactless Reader Capabilities",
+        "Table 4-4 Enhanced Contactless Reader Capabilities"
+      ],
+      "note": "Engineering reference: Expresspay Terminal Technical Specification v4.2"
+    },
+    "extends": "emv.json",
+    "generated": "2026-10-29"
+  },
+  "tags": [
+    {
+      "tag": "9F6D",
+      "name": "Contactless Reader Capabilities",
+      "description": "Proprietary reader capabilities for Kernel 4; Byte 1 bits 8, 7, and 4 indicate terminal support for Expresspay contactless. Passed to the card in GPO when requested in PDOL.",
+      "type": "BITFIELD",
+      "format": "b",
+      "length": "1",
+      "source": "Terminal",
+      "scheme": "Amex",
+      "bitFields": [
+        {
+          "position": 0,
+          "length": 1,
+          "name": "EMV contact mode supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 1,
+          "length": 1,
+          "name": "Mag-stripe mode supported (legacy)",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 2,
+          "length": 1,
+          "name": "Mobile device",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 3,
+          "length": 1,
+          "name": "CVM required",
+          "type": "BOOLEAN"
+        }
+      ]
+    },
+    {
+      "tag": "9F6E",
+      "name": "Enhanced Contactless Reader Capabilities",
+      "description": "Proprietary data element for contactless transaction processing and static reader capabilities; returned in GPO when requested in PDOL.",
+      "type": "BITFIELD",
+      "format": "b",
+      "length": "4",
+      "source": "Terminal",
+      "scheme": "Amex",
+      "bitFields": [
+        {
+          "position": 0,
+          "length": 1,
+          "name": "AEIPS contact mode supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 1,
+          "length": 1,
+          "name": "Expresspay Magstripe supported (legacy)",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 4,
+          "length": 1,
+          "name": "Expresspay EMV full online not supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 5,
+          "length": 1,
+          "name": "Expresspay EMV partial online supported",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 7,
+          "length": 1,
+          "name": "Contact mode supported",
+          "type": "BOOLEAN"
+        }
+      ],
+      "note": "Bytes 2–4 bit semantics in Kernel 4 Table 4-4 (Online PIN, CVM required, delayed authorisation, unable to go online)."
+    },
+    {
+      "tag": "9F70",
+      "name": "Card Interface and Payment Capabilities",
+      "description": "Card indicators for interface and payment capabilities used by Kernel 4.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "2",
+      "source": "ICC",
+      "scheme": "Amex"
+    }
+  ]
+}

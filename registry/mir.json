@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "scheme": "MIR",
+    "spec": {
+      "document": "Mir PS Contactless Terminal Kernel Specification_v.2.4.0.pdf",
+      "version": "2.4.0",
+      "sections": [
+        "Table 57 Tags Used in Contactless Transaction",
+        "Table 75 Kernel to Terminal data"
+      ]
+    },
+    "extends": "emv.json",
+    "generated": "2026-10-29"
+  },
+  "tags": [
+    {
+      "tag": "DF70",
+      "name": "Application Info (AI)",
+      "description": "MIR application information returned at application selection.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "5",
+      "source": "ICC",
+      "scheme": "MIR"
+    },
+    {
+      "tag": "DF71",
+      "name": "Transaction Processing Mode",
+      "description": "MIR transaction processing mode indicator.",
+      "type": "BINARY",
+      "format": "b",
+      "length": "1",
+      "source": "ICC",
+      "scheme": "MIR"
+    },
+    {
+      "tag": "DF1F",
+      "name": "Issuer non-financial Data",
+      "description": "Issuer non-financial data container (MIR tags DF01–DF1F range).",
+      "type": "BINARY",
+      "format": "b",
+      "length": "var",
+      "source": "ICC",
+      "scheme": "MIR"
+    }
+  ]
+}

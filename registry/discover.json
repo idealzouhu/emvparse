@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "scheme": "Discover",
+    "spec": {
+      "document": "C-6-Kernel-6-V2.12.pdf",
+      "version": "2.12",
+      "sections": [
+        "Appendix D.6 Card Processing Requirements"
+      ],
+      "note": "Engineering reference: DGN_D-PAS_Connect_Terminal_CTL_Spec_v2.1_20230606.pdf"
+    },
+    "extends": "emv.json",
+    "generated": "2026-10-29"
+  },
+  "tags": [
+    {
+      "tag": "9F71",
+      "name": "Card Processing Requirements (CPR)",
+      "description": "Contactless Kernel 6 proprietary data element communicating card processing requirements to the reader.",
+      "type": "BITFIELD",
+      "format": "b",
+      "length": "2",
+      "source": "ICC",
+      "scheme": "Discover",
+      "bitFields": [
+        {
+          "position": 0,
+          "length": 1,
+          "name": "Switch interface if ODA fails",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 1,
+          "length": 1,
+          "name": "CVM fallback to no CVM allowed",
+          "type": "BOOLEAN"
+        },
+        {
+          "position": 5,
+          "length": 1,
+          "name": "PID limit reached — loyalty approved",
+          "type": "BOOLEAN"
+        }
+      ]
+    },
+    {
+      "tag": "D1",
+      "name": "Offline Balance",
+      "description": "Discover contactless offline balance (Kernel 6); optional in GPO or records.",
+      "type": "NUMERIC",
+      "format": "n",
+      "length": "6",
+      "source": "ICC",
+      "scheme": "Discover"
+    }
+  ]
+}

@@ -11,7 +11,7 @@ Chinese summary: [../zh/标签注册表数据模型.md](../zh/标签注册表数
 | `emv.json` | Canonical EMV base (Book 3 Annex A and related) |
 | `contactless-entry-point.json` | EMV contactless Entry Point overlay (Book B Annex A Table A-1) |
 | `visa.json` | Visa overlay (VCPS) |
-| `upi.json` | UnionPay overlay (Q/CUP 045.5 Part 5) |
+| `upi.json` | UnionPay overlay (Kernel 7 + Q/CUP 045.5 qUICS; `9F66`/`9F6C` as `variants[]`) |
 | `manifest.json` | `base` + per-scheme overlay file order |
 
 Load order for scheme `S`: **`base`**, then **`overlays[S]`** left-to-right. Later files **replace** the same tag hex in the flat map. Override events are logged at info level.
