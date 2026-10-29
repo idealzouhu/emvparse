@@ -1,6 +1,7 @@
 #include "value_semantic_parser.h"
 #include "tag_registry.h"
 #include "dol_parser.h"
+#include "cvm_list_parser.h"
 #include "iso_numeric_lookup.h"
 #include <emvparse/tlv.h>
 #include <nlohmann/json.hpp>
@@ -12,6 +13,12 @@ namespace {
 
 int emvBcdByte(uint8_t byte) {
     return static_cast<int>(((byte >> 4) & 0x0F) * 10 + (byte & 0x0F));
+}
+
+std::string hexByteUpper(uint8_t byte) {
+    std::ostringstream oss;
+    oss << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(byte);
+    return oss.str();
 }
 
 void enrichNumericWithIsoOrEnumMap(const TagInfo& tagInfo, nlohmann::ordered_json& result) {
@@ -119,6 +126,31 @@ nlohmann::ordered_json ValueSemanticParser::parseValueSemantic(
 
     if (tagInfo->tag == "9F21" && tagInfo->format == "n" && value.size() == 3) {
         result = parseTimeValueBcd(value);
+        result["raw"] = tlv->valueHex();
+        return result;
+    }
+
+    // EMV Book 3 — CVM List (8E): 8-byte Amount X/Y + 2n-byte rule pairs.
+    if (tagInfo->tag == "8E" && value.size() >= 10 && (value.size() - 8) % 2 == 0) {
+        const auto cvm = parseEmvCvmList(value);
+        result["amountX"] = cvm.amountX;
+        result["amountY"] = cvm.amountY;
+        nlohmann::ordered_json rules = nlohmann::ordered_json::array();
+        for (const auto& rule : cvm.rules) {
+            nlohmann::ordered_json item;
+            item["index"] = rule.index;
+            item["cvmCode"] = hexByteUpper(rule.cvmCode);
+            item["conditionCode"] = hexByteUpper(rule.conditionCode);
+            item["cvm"] = rule.cvmMeaning;
+            item["condition"] = rule.conditionMeaning;
+            item["applyNextOnFail"] = rule.applyNextOnFail;
+            item["line"] = rule.line;
+            rules.push_back(item);
+        }
+        result["cvmRules"] = rules;
+        if (!cvm.error.empty()) {
+            result["cvmParseError"] = cvm.error;
+        }
         result["raw"] = tlv->valueHex();
         return result;
     }

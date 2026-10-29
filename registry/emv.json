@@ -781,7 +781,7 @@
       "tag": "8E",
       "name": "Cardholder Verification Method (CVM) List",
       "description": "Identifies a method of verification of the cardholder supported by the application",
-      "type": "BITFIELD_LIST",
+      "type": "BINARY",
       "format": "b",
       "length": "10-252",
       "source": "ICC",

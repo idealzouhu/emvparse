@@ -19,6 +19,7 @@ set(EMVPARSE_SOURCES
     tlv/tlv_parser.cpp
     tlv/tag_registry.cpp
     tlv/tag_registry_ops.cpp
+    tlv/cvm_list_parser.cpp
     tlv/value_semantic_parser.cpp
     tlv/tlv_semantic_summary.cpp
     tlv/tlv_formatter.cpp

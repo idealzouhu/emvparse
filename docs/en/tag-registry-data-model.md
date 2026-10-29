@@ -56,6 +56,10 @@ Schema: [`registry/tag-registry.schema.json`](../../registry/tag-registry.schema
 - **`BITFIELD`** `bitFields[].position`: zero-based bit index from the **MSB (EMV b8)** of the value’s first byte, continuing toward the LSB and then the next byte. Table/CLI lines label bits as **b8…b1** per EMV annex tables (`bit N` = `8 - (position mod 8)` within the byte).
 - **`CERTIFICATE`** and other Annex labels without parser support → **`BINARY`**.
 
+### Tag-specific value layouts
+
+Some Book 3 values are structured (fixed header + repeated pairs, etc.) but do not match registry types such as **`BITFIELD`** or **`LIST`** (DOL). For those tags, **`type`** stays **`BINARY`** (or **`N/A`**, normalized to **`BINARY`**) and **`ValueSemanticParser`** applies a **tag-only** branch (e.g. **`94`** AFL, **`8E`** CVM List, **`9F27`** CID). Normative tables for CVM codes/conditions remain in C++ alongside other tag-specific parsers.
+
 ## English text convention
 
 | Content | Language |

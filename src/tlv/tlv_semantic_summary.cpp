@@ -219,6 +219,30 @@ std::vector<SemanticSummaryLine> buildSemanticSummaryLines(
         lines.insert(lines.end(), dolLines.begin(), dolLines.end());
     }
 
+    if (semantic.contains("amountX") && semantic["amountX"].is_number_unsigned()) {
+        lines.push_back(
+            {"Amount X: " + std::to_string(semantic["amountX"].get<uint64_t>()), false});
+    }
+    if (semantic.contains("amountY") && semantic["amountY"].is_number_unsigned()) {
+        lines.push_back(
+            {"Amount Y: " + std::to_string(semantic["amountY"].get<uint64_t>()), false});
+    }
+    if (semantic.contains("cvmRules") && semantic["cvmRules"].is_array()) {
+        for (const auto& rule : semantic["cvmRules"]) {
+            if (!rule.is_object()) {
+                continue;
+            }
+            SemanticSummaryLine line;
+            line.text = rule.value("line", std::string());
+            if (line.text.empty() && rule.contains("cvm") && rule.contains("condition")) {
+                line.text = rule["cvm"].get<std::string>() + "; " + rule["condition"].get<std::string>();
+            }
+            if (!line.text.empty()) {
+                lines.push_back(line);
+            }
+        }
+    }
+
     if (semantic.contains("entries") && semantic["entries"].is_array()) {
         for (const auto& entry : semantic["entries"]) {
             if (!entry.is_object()) {
@@ -301,6 +325,30 @@ std::vector<SemanticSummaryLine> buildTreeSemanticSummaryLines(
     if (semantic.contains("dolEntries") && semantic["dolEntries"].is_array()) {
         const auto dolLines = buildDolEntrySummaryLines(semantic["dolEntries"]);
         lines.insert(lines.end(), dolLines.begin(), dolLines.end());
+    }
+
+    if (semantic.contains("amountX") && semantic["amountX"].is_number_unsigned()) {
+        lines.push_back(
+            {"Amount X: " + std::to_string(semantic["amountX"].get<uint64_t>()), false});
+    }
+    if (semantic.contains("amountY") && semantic["amountY"].is_number_unsigned()) {
+        lines.push_back(
+            {"Amount Y: " + std::to_string(semantic["amountY"].get<uint64_t>()), false});
+    }
+    if (semantic.contains("cvmRules") && semantic["cvmRules"].is_array()) {
+        for (const auto& rule : semantic["cvmRules"]) {
+            if (!rule.is_object()) {
+                continue;
+            }
+            SemanticSummaryLine line;
+            line.text = rule.value("line", std::string());
+            if (line.text.empty() && rule.contains("cvm") && rule.contains("condition")) {
+                line.text = rule["cvm"].get<std::string>() + "; " + rule["condition"].get<std::string>();
+            }
+            if (!line.text.empty()) {
+                lines.push_back(line);
+            }
+        }
     }
 
     if (semantic.contains("entries") && semantic["entries"].is_array()) {

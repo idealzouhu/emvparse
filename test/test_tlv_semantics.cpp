@@ -453,3 +453,32 @@ TEST_F(TlvSemanticsTest, AipAflTableHtmlAndJson) {
     EXPECT_EQ(*emvPos, 15);
 }
 
+TEST_F(TlvSemanticsTest, CvmListValueSemantics) {
+    // EMV Book 3 CVM List: Amount X/Y = 0; rules 42/03 and 1F/00 (from transaction-script sample).
+    const std::string hexData = "8E0C000000000000000042031F00";
+    const std::string jsonOutput = inputParser->parseHexToJson(hexData);
+    const nlohmann::json root = nlohmann::json::parse(jsonOutput);
+    const nlohmann::json* cvmNode = findTagNode(root, "8E");
+    ASSERT_NE(cvmNode, nullptr);
+    ASSERT_TRUE(cvmNode->contains("semantic"));
+    const nlohmann::json& semantic = (*cvmNode)["semantic"];
+    ASSERT_TRUE(semantic.contains("cvmRules"));
+    ASSERT_TRUE(semantic["cvmRules"].is_array());
+    EXPECT_EQ(semantic["cvmRules"].size(), 2U);
+    EXPECT_EQ(semantic.value("amountX", 1U), 0U);
+    EXPECT_EQ(semantic.value("amountY", 1U), 0U);
+    EXPECT_EQ(semantic["cvmRules"][0].value("cvmCode", std::string()), "42");
+    EXPECT_EQ(semantic["cvmRules"][0].value("conditionCode", std::string()), "03");
+    EXPECT_NE(semantic["cvmRules"][0].value("cvm", std::string()).find("Enciphered PIN verified online"), std::string::npos);
+    EXPECT_NE(semantic["cvmRules"][0].value("condition", std::string()).find("terminal supports"), std::string::npos);
+    EXPECT_EQ(semantic["cvmRules"][1].value("cvmCode", std::string()), "1F");
+    EXPECT_NE(semantic["cvmRules"][1].value("cvm", std::string()).find("No CVM required"), std::string::npos);
+
+    emvparse::ParseOutputOptions tableOpts;
+    tableOpts.format = emvparse::OutputFormat::Table;
+    const std::string tableOut = inputParser->parseHexWithOptions(hexData, tableOpts);
+    EXPECT_NE(tableOut.find("Amount X: 0"), std::string::npos);
+    EXPECT_NE(tableOut.find("Enciphered PIN verified online"), std::string::npos);
+    EXPECT_NE(tableOut.find("No CVM required"), std::string::npos);
+}
+
