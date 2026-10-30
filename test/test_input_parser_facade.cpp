@@ -56,13 +56,6 @@ TEST(InputParserFacadeTest, InvalidHexParseHexToJson) {
     EXPECT_FALSE(parser.lastError().empty());
 }
 
-TEST(InputParserFacadeTest, InvalidHexParseHex) {
-    EmvInputParser parser;
-    const auto roots = parser.parseHex("GG");
-    EXPECT_TRUE(roots.empty());
-    EXPECT_FALSE(parser.lastError().empty());
-}
-
 TEST(InputParserFacadeTest, InvalidManifestLoadRegistry) {
     EmvInputParser parser;
     EXPECT_FALSE(parser.loadRegistry("nonexistent/manifest.json", "EMV"));

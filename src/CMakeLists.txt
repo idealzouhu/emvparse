@@ -149,7 +149,6 @@ install(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/emvparse/input_parser.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/emvparse/logging.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/emvparse/output_options.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include/emvparse/tlv.h
     DESTINATION include/emvparse
 )
 

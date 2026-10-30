@@ -121,15 +121,6 @@ std::string EmvInputParser::parseHexToJson(const std::string& hexStr) {
     return TlvTreeFormatter::toJsonArray(roots, impl_->tlvParser_.tagRegistry());
 }
 
-std::vector<std::shared_ptr<TLV>> EmvInputParser::parseHex(const std::string& hexStr) {
-    impl_->lastError_.clear();
-    std::vector<uint8_t> data;
-    if (!hexToBytesOrError(hexStr, data, impl_->lastError_)) {
-        return {};
-    }
-    return impl_->tlvParser_.parseBytes(data);
-}
-
 std::string EmvInputParser::getTagInfo(const std::string& tagHex) const {
     return impl_->tlvParser_.getTagInfo(tagHex);
 }

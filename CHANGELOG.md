@@ -8,6 +8,10 @@ For each release, use a compare link to the previous tag, e.g. `## [1.0.1](https
 
 ## [Unreleased]
 
+### Added
+
+- **本地构建脚本** — `scripts/build.ps1` / `scripts/build.sh`：优先使用仓库内 `vcpkg/`（gitignore），与 log-decrypt 相同的 `vcpkg-tool-version` + `builtin-baseline` 工作流。
+
 ### Fixed
 
 - **Release CI** — vcpkg 与 log-decrypt 对齐：固定 `vcpkg-tool-version`（2026.10.16）+ `builtin-baseline`，checkout 克隆 tag、tool/installed 缓存、`VCPKG_MANIFEST_MODE`。
@@ -15,6 +19,15 @@ For each release, use a compare link to the previous tag, e.g. `## [1.0.1](https
 ## [1.0.0](https://github.com/idealzouhu/emvparse/releases/tag/v1.0.0) (2026-10-29)
 
 First public release: EMV BER-TLV parsing as a CLI, embeddable library, and JSON registries.
+
+### Changed
+
+- **Stable library API** — Integrators use string output only (`parseHexWithOptions`, `parseHexToJson`, script helpers). The `TLV` object tree is internal (`src/tlv/`).
+
+### Removed
+
+- **`EmvInputParser::parseHex`** — Use `parseHexToJson` or `parseHexWithOptions` instead.
+- **Installed header `emvparse/tlv.h`** — Not part of the public install set.
 
 ### Added
 

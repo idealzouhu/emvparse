@@ -1,14 +1,13 @@
 #ifndef TLV_H
 #define TLV_H
 
-#include <vector>
-#include <string>
 #include <memory>
-#include "emvparse/emvparse_global.h"
+#include <string>
+#include <vector>
 
 class TLVParser;
 
-class EMVPARSE_EXPORT TLV {
+class TLV {
     friend class TLVParser;
 
 public:

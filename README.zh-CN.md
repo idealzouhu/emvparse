@@ -76,10 +76,27 @@ target_link_libraries(my_app PRIVATE EmvParse::EmvParse)
 - 跨平台共享库 `emvparse` + CLI `emvparse`
 - 单元测试（GoogleTest）
 
+## 从源码构建
+
+需要 CMake ≥ 3.10 与 C++14 编译器。脚本优先使用仓库内的 **`vcpkg/`**（已 gitignore）；若不存在则按 [vcpkg-tool-version](vcpkg-tool-version) 自动 clone。依赖版本由 [vcpkg.json](vcpkg.json) 的 `builtin-baseline` 锁定（与 [log-decrypt](https://github.com/idealzouhu/log-decrypt) 对齐）。
+
+```powershell
+# Windows（若提示无法运行脚本，先执行 Set-ExecutionPolicy -Scope Process Bypass）
+.\scripts\build.ps1
+```
+
+```bash
+# Linux / macOS / Git Bash
+chmod +x scripts/build.sh
+./scripts/build.sh
+```
+
+也可手动指定 toolchain：`cmake -B build -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_MANIFEST_MODE=ON -DBUILD_TESTING=ON`
+
 ## 系统要求
 
 - C++14、CMake 3.10+
-- 依赖：nlohmann/json（vcpkg manifest 或 FetchContent）
+- 依赖：nlohmann/json（vcpkg manifest；未使用 vcpkg 时 CMake 可 FetchContent）
 
 ## 许可证
 

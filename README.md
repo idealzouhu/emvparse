@@ -75,10 +75,27 @@ Five-minute examples: [Library integration](docs/en/library-integration.md).
 - Cross-platform shared library `emvparse` and CLI `emvparse`
 - Unit tests (GoogleTest)
 
+## Build from source
+
+Requires CMake ≥ 3.10 and a C++14 toolchain. Scripts prefer an in-repo **`vcpkg/`** tree (gitignored); if missing, they clone [vcpkg-tool-version](vcpkg-tool-version). Versions are pinned via [vcpkg.json](vcpkg.json) `builtin-baseline` (aligned with the log-decrypt repo layout).
+
+```powershell
+# Windows
+.\scripts\build.ps1
+```
+
+```bash
+# Linux / macOS / Git Bash
+chmod +x scripts/build.sh
+./scripts/build.sh
+```
+
+Manual configure: `cmake -B build -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_MANIFEST_MODE=ON -DBUILD_TESTING=ON`
+
 ## Requirements
 
 - C++14, CMake 3.10+
-- Dependency: nlohmann/json (vcpkg manifest or FetchContent)
+- nlohmann/json (vcpkg manifest; FetchContent fallback without vcpkg)
 
 ## License
 

@@ -11,6 +11,8 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 build/
+vcpkg/
+vcpkg_installed/
 .cursor/
 docs/examples/
 

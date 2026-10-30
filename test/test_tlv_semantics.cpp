@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include <emvparse/input_parser.h>
 #include <emvparse/output_options.h>
-#include <emvparse/tlv.h>
+#include "tlv.h"
+#include "tlv_parser.h"
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
@@ -68,9 +69,11 @@ protected:
     void SetUp() override {
         const std::string manifestPath = "../../registry/manifest.json";
         inputParser = std::make_unique<EmvInputParser>(manifestPath, "EMV");
+        ASSERT_TRUE(tlvParser_.loadTagRegistry(manifestPath, "EMV"));
     }
 
     std::unique_ptr<EmvInputParser> inputParser;
+    TLVParser tlvParser_;
 };
 
 // 测试1: NUMERIC 类型 Value 的语义解析
@@ -78,7 +81,7 @@ TEST_F(TlvSemanticsTest, NumericValueSemantics) {
     // 测试数据: 9F33 02 01 41 (Terminal Country Code)
     // Value = 0x01 0x41 (BCD 编码) = 141 (十进制)
     std::string hexData = "9F33020141";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -102,7 +105,7 @@ TEST_F(TlvSemanticsTest, TextValueSemantics) {
     // 测试数据: 5F20 03 42 6F 62 (Cardholder Name = "Bob")
     // Value = 0x42 0x6F 0x62 (ASCII) = "Bob"
     std::string hexData = "5F2003426F62";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -128,7 +131,7 @@ TEST_F(TlvSemanticsTest, BitFieldValueSemantics) {
     // bits 4-6 = 101 = 5 → ErrorCode (但枚举中没有5，应该是未定义)
     // bits 0-3 = 0000 = 0 → SubStatus = 0
     std::string hexData = "9F6B01D0";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -155,7 +158,7 @@ TEST_F(TlvSemanticsTest, BinaryValueSemantics) {
     // 测试数据: 84 04 A1 B2 C3 D4 (DF Name)
     // Value = 0xA1 0xB2 0xC3 0xD4 (纯二进制数据)
     std::string hexData = "8404A1B2C3D4";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -179,7 +182,7 @@ TEST_F(TlvSemanticsTest, CompositeValueSemantics) {
     // 外层: 6F (FCI Template, 复合标签，bit 6 = 1), Length=4
     // 内层: 95 02 01 41
     std::string hexData = "6F0495020141";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -204,7 +207,7 @@ TEST_F(TlvSemanticsTest, AmountValueSemantics) {
     // 测试数据: 9F02 04 00 00 01 50 (Amount, Authorised)
     // Value = 0x00 0x00 0x01 0x50 (BCD) = 150 (分) = 1.50 (元)
     std::string hexData = "9F020400000150";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -233,7 +236,7 @@ TEST_F(TlvSemanticsTest, MultipleSemanticTypes) {
     // 5F20 03 42 6F 62 (TEXT)
     // 9F6B 01 D0 (BITFIELD)
     std::string hexData = "9F330201415F2003426F629F6B01D0";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 3);
     
@@ -260,7 +263,7 @@ TEST_F(TlvSemanticsTest, NestedCompositeSemantics) {
     // 内层1: 84 04 A1 B2 C3 D4
     // 内层2: 95 02 01 41
     std::string hexData = "6F088404A1B2C3D495020141";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -283,7 +286,7 @@ TEST_F(TlvSemanticsTest, NestedCompositeSemantics) {
 TEST_F(TlvSemanticsTest, EmptyValueSemantics) {
     // 测试数据: 9F33 00 (空 Value)
     std::string hexData = "9F3300";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
 
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -300,7 +303,7 @@ TEST_F(TlvSemanticsTest, TagRegistryLoading) {
     
     // 测试 9F33 (EMV base registry)
     std::string hexData = "9F33020141";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
     
     ASSERT_EQ(tlvList.size(), 1);
     EXPECT_EQ(tlvList[0]->tagHex(), "9F33");
@@ -313,6 +316,8 @@ TEST_F(TlvSemanticsTest, TagRegistryLoading) {
 TEST_F(TlvSemanticsTest, BitFieldTypeDetailedSemantics) {
     const std::string manifestPath = "../../registry/manifest.json";
     EmvInputParser parserEmv(manifestPath, "EMV");
+    TLVParser tlvParser;
+    ASSERT_TRUE(tlvParser.loadTagRegistry(manifestPath, "EMV"));
 
     // 测试数据: TVR 包含多个设置的 bit
     // Byte 1: 0xC0 = 11000000 (b8=1, b7=1)
@@ -327,7 +332,7 @@ TEST_F(TlvSemanticsTest, BitFieldTypeDetailedSemantics) {
     // Byte 5: 0x10 = 00010000 (b5=1)
     //   - b5: Script processing failed after final GENERATE AC
     std::string hexData = "9505C080402010";
-    auto tlvList = parserEmv.parseHex(hexData);
+    auto tlvList = tlvParser.parseHex(hexData);
     
     ASSERT_EQ(tlvList.size(), 1);
     auto tlv = tlvList[0];
@@ -384,7 +389,7 @@ TEST_F(TlvSemanticsTest, BitFieldTypeDetailedSemantics) {
 
 TEST_F(TlvSemanticsTest, AipAflTableHtmlAndJson) {
     const std::string hexData = "770E8202198094081001020120010300";
-    auto tlvList = inputParser->parseHex(hexData);
+    auto tlvList = tlvParser_.parseHex(hexData);
     ASSERT_EQ(tlvList.size(), 1);
     EXPECT_EQ(tlvList[0]->tagHex(), "77");
 

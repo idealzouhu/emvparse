@@ -4,7 +4,6 @@
 #include "emvparse/emvparse_global.h"
 #include "emvparse/logging.h"
 #include "emvparse/output_options.h"
-#include "emvparse/tlv.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -36,8 +35,6 @@ public:
     );
 
     std::string parseHexToJson(const std::string& hexStr);
-
-    std::vector<std::shared_ptr<TLV>> parseHex(const std::string& hexStr);
 
     std::string getTagInfo(const std::string& tagHex) const;
 

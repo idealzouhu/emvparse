@@ -1,7 +1,7 @@
 #include "tlv_semantic_for_tlv.h"
 #include "tag_registry.h"
 #include "value_semantic_parser.h"
-#include <emvparse/tlv.h>
+#include "tlv.h"
 
 nlohmann::ordered_json semanticForTlv(
     const std::shared_ptr<TLV>& tlv,

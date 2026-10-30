@@ -4,7 +4,7 @@
 /**
  * @brief Shared-library export/import macros (`EMVPARSE_EXPORT`).
  *
- * Included automatically by public headers (`input_parser.h`, `tlv.h`, …).
+ * Included automatically by public headers (`input_parser.h`, …).
  * Installed for ABI; application code should not `#include` this file directly.
  */
 #ifndef EMVPARSE_EXPORT

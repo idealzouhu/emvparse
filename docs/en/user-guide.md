@@ -47,16 +47,18 @@ Platforms: Windows, Linux, macOS.
 
 ### Development build (no install)
 
-With vcpkg (recommended):
+With vcpkg (recommended): run **`scripts/build.ps1`** (Windows) or **`scripts/build.sh`** (Unix). Scripts prefer `./vcpkg/` in the repo (gitignored), cloning per `vcpkg-tool-version` when missing, then configure with manifest mode.
+
+Manual equivalent:
 
 ```bash
-cmake .. -DCMAKE_TOOLCHAIN_FILE=[vcpkg]/scripts/buildsystems/vcpkg.cmake \
-  -DVCPKG_MANIFEST_MODE=ON -DVCPKG_TARGET_TRIPLET=x64-linux
-cmake --build . --config Release
-ctest --output-on-failure
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake \
+  -DVCPKG_MANIFEST_MODE=ON -DVCPKG_TARGET_TRIPLET=x64-linux -DBUILD_TESTING=ON
+cmake --build build
+ctest --test-dir build --output-on-failure
 ```
 
-Without vcpkg, configure with plain `cmake ..`; dependencies may be fetched via FetchContent.
+Without vcpkg, `cmake -B build` may fetch nlohmann/json via FetchContent; tests may fetch GoogleTest the same way.
 
 ### Install for downstream `find_package`
 
@@ -72,7 +74,7 @@ CMake options: `BUILD_EMVPARSE_CLI` (default ON), `BUILD_TESTING` (default ON).
 
 ### EmvInputParser
 
-Recommended entry point: loads **tag registry + APDU command manifest**, classifies input (`auto` / `tlv` / `capdu` / `rapdu`), and emits JSON, table, or HTML. For integration, include `input_parser.h`, `output_options.h`, and/or `tlv.h` only. `emvparse_global.h` is installed as an ABI helper (export/import macros) and is included transitively—do not use it directly.
+Recommended entry point: loads **tag registry + APDU command manifest**, classifies input (`auto` / `tlv` / `capdu` / `rapdu`), and emits JSON, table, or HTML. For integration, include `input_parser.h`, `output_options.h`, and (when using log callbacks) `logging.h`. `emvparse_global.h` is installed as an ABI helper (export/import macros) and is included transitively—do not use it directly.
 
 ```cpp
 #include <emvparse/input_parser.h>
@@ -89,30 +91,18 @@ std::cout << parser.parseHexWithOptions("00B2021400", opts) << std::endl;
 |--------|------|
 | `loadRegistry(manifestPath, scheme)` | Reload tag + APDU manifest |
 | `parseHexWithOptions(hex, opts)` | CLI `parse` parity (TLV / C-APDU / R-APDU) |
-| `parseHex(hex)` | BER-TLV tree (`std::vector<std::shared_ptr<TLV>>`) |
 | `parseHexToJson(hex)` | BER-TLV with registry semantics → JSON |
 | `getTagInfo(tagHex)` | Tag metadata JSON or empty if unknown |
 | `parseScriptFile(path, opts)` / `parseScriptJson(json, opts)` | Transaction script → formatted string |
-| `lastError()` | Error text after failed `loadRegistry`, invalid hex on `parseHex` / `parseHexToJson`, empty result from `parseHexWithOptions`, or script helpers |
+| `lastError()` | Error text after failed `loadRegistry`, invalid hex on `parseHexToJson`, empty result from `parseHexWithOptions`, or script helpers |
 | `hexToBytes(hex)` | Static hex normalizer (shared with CLI) |
 | `setLogCallback(cb)` | Diagnostic logging (`LogLevel`, `LogCallback` in this header) |
 
-On failure, `loadRegistry` returns `false` and sets `lastError()`. Invalid hex makes `parseHex` / `parseHexToJson` return empty results with `lastError()` set. Script helpers and failed `parseHexWithOptions` return an empty string and set `lastError()`.
+On failure, `loadRegistry` returns `false` and sets `lastError()`. Invalid hex makes `parseHexToJson` return an empty result with `lastError()` set. Script helpers and failed `parseHexWithOptions` return an empty string and set `lastError()`.
 
-Nested TLV: EMV **constructed tag** (tag byte bit 6 set) is parsed recursively into `TLV::children` without requiring the registry.
+Nested constructed TLV (tag byte bit 6 set) appears as nested JSON objects under `children` in `parseHexToJson` / `parseHexWithOptions` output.
 
-`TLVParser`, `ApduParser`, and transaction-script types live in internal headers under `src/` (not installed), alongside `tag_registry.h` and similar. Use `EmvInputParser` unless you build against the source tree and need white-box tests.
-
-### TLV
-
-```cpp
-const ByteArray& getTag() const;
-const ByteArray& getValue() const;
-const Children& getChildren() const;
-std::string tagHex() const;
-std::string valueHex() const;
-std::string lengthHex() const;
-```
+`TLV`, `TLVParser`, `ApduParser`, and transaction-script types live in internal headers under `src/` (not installed). Use `EmvInputParser` string APIs unless you build from source and need object-level tests.
 
 ### Registry ops (source tree / CLI only)
 
@@ -122,14 +112,7 @@ std::string lengthHex() const;
 
 ## 5. Examples
 
-Parse hex without registry (structure only):
-
-```cpp
-EmvInputParser parser;
-auto list = parser.parseHex("9F33020141");
-```
-
-Parse with semantics (JSON):
+Parse BER-TLV with registry semantics (JSON):
 
 ```cpp
 EmvInputParser parser("registry/manifest.json", "EMV");

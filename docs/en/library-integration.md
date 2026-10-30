@@ -19,7 +19,7 @@ Point CMake at the install prefix:
 cmake -B build -DCMAKE_PREFIX_PATH="/path/to/emvparse/install"
 ```
 
-After `cmake --install`, application code should include only `input_parser.h`, `output_options.h`, `tlv.h`, and (when using log callbacks) `logging.h` from `include/emvparse/`. The install tree also contains `emvparse_global.h` (`EMVPARSE_EXPORT` for shared-library ABI on Windows and similar platforms). Public headers include it automatically—**do not `#include <emvparse/emvparse_global.h>` in your project**.
+After `cmake --install`, application code should include only `input_parser.h`, `output_options.h`, and (when using log callbacks) `logging.h` from `include/emvparse/`. The install tree also contains `emvparse_global.h` (`EMVPARSE_EXPORT` for shared-library ABI on Windows and similar platforms). Public headers include it automatically—**do not `#include <emvparse/emvparse_global.h>` in your project**.
 
 ## Source tree
 

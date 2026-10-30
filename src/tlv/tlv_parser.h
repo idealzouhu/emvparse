@@ -2,7 +2,7 @@
 #define EMVPARSE_TLV_PARSER_H
 
 #include "emvparse/logging.h"
-#include "emvparse/tlv.h"
+#include "tlv.h"
 #include <memory>
 #include <vector>
 #include <string>

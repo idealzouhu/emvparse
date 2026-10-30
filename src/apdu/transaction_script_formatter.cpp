@@ -5,7 +5,7 @@
 #include "hex_util.h"
 #include "value_semantic_parser.h"
 #include "tlv_semantic_summary.h"
-#include <emvparse/tlv.h>
+#include "tlv.h"
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <iomanip>

@@ -2,7 +2,7 @@
 #define TLVFORMATTER_H
 
 #include "emvparse/output_options.h"
-#include "emvparse/tlv.h"
+#include "tlv.h"
 #include <nlohmann/json.hpp>
 #include <memory>
 #include <string>

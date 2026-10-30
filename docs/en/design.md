@@ -51,10 +51,9 @@ Installed headers (`cmake --install`, parse-only package):
 | `input_parser.h` | `EmvInputParser` |
 | `logging.h` | `LogLevel`, `LogCallback` |
 | `output_options.h` | `ParseOutputOptions`, formats |
-| `tlv.h` | Read-only `TLV` tree |
 | `emvparse_global.h` | `EMVPARSE_EXPORT` (ABI only; included by the headers above—not part of the application API) |
 
-Applications should `#include` only the first three headers. `emvparse_global.h` must remain on the install path so those headers compile when linking against the shared library (especially on Windows).
+Applications should `#include` only the first three headers (`input_parser.h`, `output_options.h`, `logging.h` when needed). `emvparse_global.h` must remain on the install path so those headers compile when linking against the shared library (especially on Windows).
 
 Not installed: everything under `src/` (`tlv_parser.h`, `tag_registry_ops.h`, `TagRegistry`, `TLVFormatter`, …). Build from source or link the CLI to use registry validate/merge.
 
@@ -65,7 +64,7 @@ Applications should use `EmvInputParser` + `ParseOutputOptions` only.
 - Pimpl hides `TLVParser` and `ApduRegistry`.
 - `loadRegistry` loads tag rules and APDU commands/status words.
 - `parseHexWithOptions` mirrors `emvparse parse`; `parseScriptFile` / `parseScriptJson` mirror `emvparse script`.
-- `parseHex`, `parseHexToJson`, `getTagInfo`, and `hexToBytes` cover BER-TLV and registry lookup without exposing internal parsers.
+- `parseHexToJson`, `getTagInfo`, and `hexToBytes` cover BER-TLV and registry lookup without exposing internal parsers or the `TLV` object tree.
 
 ## 4.1 TLVParser (internal)
 
