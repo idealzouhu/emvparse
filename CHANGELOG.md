@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 For each release, use a compare link to the previous tag, e.g. `## [1.0.1](https://github.com/idealzouhu/emvparse/compare/v1.0.0...v1.0.1) (YYYY-MM-DD)`.
 
+## [Unreleased]
+
+### Fixed
+
+- **Release CI** — vcpkg 与 log-decrypt 对齐：固定 `vcpkg-tool-version`（2026.10.16）+ `builtin-baseline`，checkout 克隆 tag、tool/installed 缓存、`VCPKG_MANIFEST_MODE`。
+
 ## [1.0.0](https://github.com/idealzouhu/emvparse/releases/tag/v1.0.0) (2026-10-29)
 
 First public release: EMV BER-TLV parsing as a CLI, embeddable library, and JSON registries.

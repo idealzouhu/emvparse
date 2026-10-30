@@ -6,6 +6,12 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+env:
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+
 jobs:
   release:
     strategy:
@@ -44,38 +50,54 @@ jobs:
             fi
           fi
 
-      - name: Cache vcpkg
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ github.workspace }}/vcpkg/installed
-            ${{ github.workspace }}/vcpkg/buildtrees
-            ${{ github.workspace }}/vcpkg/downloads
-          key: release-vcpkg-${{ matrix.os }}-${{ matrix.triplet }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            release-vcpkg-${{ matrix.os }}-${{ matrix.triplet }}-
+      - name: Read vcpkg tool version
+        id: vcpkg_tool
+        shell: bash
+        run: echo "tag=$(tr -d '\n\r' < vcpkg-tool-version)" >> "$GITHUB_OUTPUT"
 
-      - name: Bootstrap vcpkg (Linux)
-        if: runner.os != 'Windows'
-        run: |
-          git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
-          ./vcpkg/bootstrap-vcpkg.sh
+      - name: Cache vcpkg tool
+        uses: actions/cache@v4
+        id: vcpkg_tool_cache
+        with:
+          path: vcpkg
+          key: vcpkg-tool-${{ runner.os }}-${{ steps.vcpkg_tool.outputs.tag }}
+
+      - name: Clone vcpkg
+        if: steps.vcpkg_tool_cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          ref: ${{ steps.vcpkg_tool.outputs.tag }}
+          path: vcpkg
+          fetch-depth: 1
 
       - name: Bootstrap vcpkg (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
-          .\vcpkg\bootstrap-vcpkg.bat
+        if: runner.os == 'Windows' && steps.vcpkg_tool_cache.outputs.cache-hit != 'true'
+        shell: cmd
+        run: .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Bootstrap vcpkg (Unix)
+        if: runner.os != 'Windows' && steps.vcpkg_tool_cache.outputs.cache-hit != 'true'
+        run: ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Cache vcpkg installed ports
+        uses: actions/cache@v4
+        id: vcpkg_installed_cache
+        with:
+          path: build/vcpkg_installed
+          key: vcpkg-installed-${{ runner.os }}-${{ matrix.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-tool-version') }}
 
       - name: Configure
-        run: >
-          cmake -S . -B build
-          -DCMAKE_BUILD_TYPE=Release
-          -DBUILD_TESTING=OFF
-          -DBUILD_EMVPARSE_CLI=ON
-          -DCMAKE_INSTALL_PREFIX=install
-          -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
-          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        shell: bash
+        run: |
+          cmake -B build -S . \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_TARGET_TRIPLET="${{ matrix.triplet }}" \
+            -DVCPKG_MANIFEST_MODE=ON \
+            -DBUILD_TESTING=OFF \
+            -DBUILD_EMVPARSE_CLI=ON \
+            -DCMAKE_INSTALL_PREFIX=install
 
       - name: Build and install
         run: |
