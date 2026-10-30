@@ -10,7 +10,7 @@ find_package(EmvParse REQUIRED)
 
 add_executable(my_emv_app main.cpp)
 target_link_libraries(my_emv_app PRIVATE EmvParse::EmvParse)
-target_compile_features(my_emv_app PRIVATE cxx_std_11)
+target_compile_features(my_emv_app PRIVATE cxx_std_14)
 ```
 
 Point CMake at the install prefix:

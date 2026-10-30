@@ -78,7 +78,7 @@ target_link_libraries(my_app PRIVATE EmvParse::EmvParse)
 
 ## 系统要求
 
-- C++11、CMake 3.10+
+- C++14、CMake 3.10+
 - 依赖：nlohmann/json（vcpkg manifest 或 FetchContent）
 
 ## 许可证

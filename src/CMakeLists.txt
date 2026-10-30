@@ -99,7 +99,7 @@ foreach(_emv_target EmvParseCore EmvParse EmvParseStatic)
         PRIVATE
             ${EMVPARSE_INTERNAL_INCLUDES}
     )
-    target_compile_features(${_emv_target} PUBLIC cxx_std_11)
+    target_compile_features(${_emv_target} PUBLIC cxx_std_14)
     if(MSVC)
         target_compile_options(${_emv_target} PRIVATE /utf-8)
     endif()

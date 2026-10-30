@@ -77,7 +77,7 @@ Five-minute examples: [Library integration](docs/en/library-integration.md).
 
 ## Requirements
 
-- C++11, CMake 3.10+
+- C++14, CMake 3.10+
 - Dependency: nlohmann/json (vcpkg manifest or FetchContent)
 
 ## License

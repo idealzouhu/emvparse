@@ -10,7 +10,7 @@ The library implements **BER-TLV** as used in EMV:
 - **Length** — short form (single byte 0–127) and BER-TLV long form (multi-byte length), per `TLVParser::readTlvLength`.
 - **Value** — raw bytes or nested TLV when the tag is **constructed** (first tag byte bit 6 = 1).
 
-Dependencies: C++11, nlohmann/json. No Qt.
+Dependencies: C++14, nlohmann/json. No Qt.
 
 ## 2. Architecture
 

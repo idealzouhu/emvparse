@@ -21,7 +21,7 @@ add_executable(emvparse_tests
     test_input_parser_facade.cpp
 )
 
-target_compile_features(emvparse_tests PRIVATE cxx_std_11)
+target_compile_features(emvparse_tests PRIVATE cxx_std_14)
 
 # Link static lib: use build-side export macros (avoid dllimport on CLI ops symbols).
 target_compile_definitions(emvparse_tests PRIVATE EMVPARSE_LIBRARY)

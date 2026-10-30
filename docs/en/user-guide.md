@@ -35,7 +35,7 @@ CMake linking and minimal examples: **[library-integration.md](library-integrati
 
 ## 2. Requirements
 
-- C++11, CMake 3.10+
+- C++14, CMake 3.10+
 - Compiler: GCC 5+, Clang 3.5+, MSVC 2015+
 - nlohmann/json (vcpkg manifest or FetchContent)
 
