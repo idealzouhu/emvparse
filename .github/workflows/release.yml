@@ -60,7 +60,7 @@ jobs:
         id: vcpkg_tool_cache
         with:
           path: vcpkg
-          key: vcpkg-tool-${{ runner.os }}-${{ steps.vcpkg_tool.outputs.tag }}
+          key: vcpkg-tool-full-${{ runner.os }}-${{ steps.vcpkg_tool.outputs.tag }}
 
       - name: Clone vcpkg
         if: steps.vcpkg_tool_cache.outputs.cache-hit != 'true'
@@ -69,7 +69,7 @@ jobs:
           repository: microsoft/vcpkg
           ref: ${{ steps.vcpkg_tool.outputs.tag }}
           path: vcpkg
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Bootstrap vcpkg (Windows)
         if: runner.os == 'Windows' && steps.vcpkg_tool_cache.outputs.cache-hit != 'true'
