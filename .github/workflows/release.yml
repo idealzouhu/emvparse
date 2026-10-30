@@ -44,7 +44,7 @@ jobs:
           fi
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           if [[ -f CMakeLists.txt ]]; then
-            PROJ_VER=$(grep -E '^project\(emvparse' CMakeLists.txt | sed -E 's/.*VERSION ([0-9.]+).*/\1/')
+            PROJ_VER=$(awk '/^project\(emvparse/{p=1} p&&/^[[:space:]]*VERSION/{print $2; exit}' CMakeLists.txt)
             if [[ -n "$PROJ_VER" && "$PROJ_VER" != "$VER" && "${{ github.ref_type }}" == "tag" ]]; then
               echo "Tag version $VER does not match PROJECT_VERSION $PROJ_VER"
               exit 1
