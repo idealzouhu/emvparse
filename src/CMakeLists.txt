@@ -77,6 +77,8 @@ foreach(_emv_cpp ${_emv_expected_cpp})
 endforeach()
 
 add_library(EmvParseCore OBJECT ${EMVPARSE_SOURCES})
+# Same objects are linked into libemvparse.so; Linux requires PIC on all object files.
+set_target_properties(EmvParseCore PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_library(EmvParse SHARED $<TARGET_OBJECTS:EmvParseCore>)
 add_library(EmvParseStatic STATIC $<TARGET_OBJECTS:EmvParseCore>)

@@ -15,6 +15,7 @@ env:
 jobs:
   release:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -101,7 +102,7 @@ jobs:
 
       - name: Build and install
         run: |
-          cmake --build build --config Release
+          cmake --build build --config Release --parallel
           cmake --install build --config Release
 
       - name: Smoke test
